@@ -1,16 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Screen Capture Every 60s</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 1rem;
-    }
-    form {
-      margin-bottom: 1rem;
-    }
-  </style>
+  <title>Screen capture</title>
 </head>
 <body>
   <form id="captureForm">
@@ -45,8 +36,7 @@
 
     async function startCapture() {
       try {
-        // Ask user permission to share a screen, window, or tab
-        captureStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        captureStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
 
         // Create hidden video element to render the screen stream
         videoEl = document.createElement('video');
@@ -63,8 +53,8 @@
         });
 
         console.log(`Screen capture started for: ${user}`);
-        takeScreenshot(); // capture immediately
-        setInterval(takeScreenshot, 10 * 1000);
+        takeScreenshot();
+        setInterval(takeScreenshot, 15 * 1000);
       } catch (err) {
         console.error("Error starting capture:", err);
       }

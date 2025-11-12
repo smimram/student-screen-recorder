@@ -11,4 +11,8 @@ let set ~time ~(user:User.t) ~filename =
 
 let alive ?(since=120.) () =
   let t = Unix.time () in
-  Hashtbl.to_seq table |> Seq.filter (fun (_,l) -> l.time >= t -. since) |> List.of_seq
+  let compare (u1,l1) (u2,l2) =
+    let c = User.compare u1 u2 in
+    if c <> 0 then c else compare l1 l2
+  in
+  Hashtbl.to_seq table |> Seq.filter (fun (_,l) -> l.time >= t -. since) |> List.of_seq |> List.sort compare

@@ -13,7 +13,7 @@ let store user screenshot =
     in
     let firstname = canonize @@ User.firstname user in
     let lastname = canonize @@ User.lastname user in
-    Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" firstname lastname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
+    Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" lastname firstname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
   let filename = Filename.concat "output" filename in
   let oc = open_out filename in
@@ -73,7 +73,11 @@ let () =
            );
          Dream.get "/alive"
            (fun _ ->
-             let body = Last.alive () |> List.map fst |> List.map User.to_string |> String.concat "\n" in
+             let title = "<h1>Students alive</h1>" in
+             let list = Last.alive () |> List.map fst |> List.map User.to_string |> List.map (fun s -> "<li>"^s^"</li>\n") |> String.concat "" in
+             let list = "<ul>"^list^"</ul>" in
+             let body = title ^ list in
+             let body = "<html><head></head><body>" ^ body ^ "</body>" in
              Dream.respond body
            )
        ]
