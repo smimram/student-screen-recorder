@@ -1,6 +1,7 @@
 let store user screenshot =
+  let time = Unix.time () in
   let filename =
-    let time = Unix.localtime @@ Unix.time () in
+    let tm = Unix.localtime time in
     let space_to_dash s = String.init (String.length s) (fun i -> if s.[i] = ' ' then '-' else s.[i]) in
     let check s = assert (not (String.contains s '/' || String.contains s '\\')); s in
     let canonize s =
@@ -12,12 +13,14 @@ let store user screenshot =
     in
     let firstname = canonize @@ User.firstname user in
     let lastname = canonize @@ User.lastname user in
-    Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" firstname lastname (time.tm_year+1900) (time.tm_mon+1) time.tm_mday time.tm_hour time.tm_min time.tm_sec
+    Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" firstname lastname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
   let filename = Filename.concat "output" filename in
   let oc = open_out filename in
   output_string oc screenshot;
-  close_out oc
+  close_out oc;
+  print_endline ("wrote: " ^ filename);
+  Last.set ~time ~user ~filename
 
 let () =
   Dream.run
@@ -34,12 +37,12 @@ let () =
                   let%lwt parts = Dream.multipart ~csrf:false response in
                   match parts with
                   | `Ok fields ->
-                     print_endline ("ok multipart: '" ^ (String.concat "," @@ List.map fst fields) ^ "'");
+                     print_endline ("multipart fields: " ^ String.concat ", " @@ List.map fst fields);
                      let firstname = List.assoc "firstname" fields |> List.hd |> snd in
                      let lastname = List.assoc "lastname" fields |> List.hd |> snd in
                      let user = User.make ~firstname ~lastname in
                      let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
-                     Printf.printf "name: %s / %s\n%!" firstname lastname;
+                     print_endline ("multipart from: " ^ User.to_string user);
                      store user screenshot;
                      Dream.respond "ok"
                   | _ ->
@@ -51,10 +54,12 @@ let () =
                   let%lwt form = Dream.form ~csrf:false response in
                   match form with
                   | `Ok fields ->
+                     print_endline ("form fields: " ^ String.concat ", " @@ List.map fst fields);
                      let firstname = List.assoc "firstname" fields in
                      let lastname = List.assoc "lastname "fields in
                      let user = User.make ~firstname ~lastname in
                      let screenshot = List.assoc "screenshot" fields in
+                     print_endline ("form from: " ^ User.to_string user);
                      store user screenshot;
                      Dream.respond "ok"
                   | _ ->
@@ -65,5 +70,10 @@ let () =
                 failwith "unhandled content type"
              | None ->
                 failwith "no content type"
+           );
+         Dream.get "/alive"
+           (fun _ ->
+             let body = Last.alive () |> List.map fst |> List.map User.to_string |> String.concat "\n" in
+             Dream.respond body
            )
        ]

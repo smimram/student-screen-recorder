@@ -13,3 +13,5 @@ let make ~firstname ~lastname =
 let firstname u = u.firstname
 
 let lastname u = u.lastname
+
+let to_string u = firstname u ^ " " ^ lastname u

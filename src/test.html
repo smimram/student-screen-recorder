@@ -28,7 +28,8 @@
     let lastname = '';
     let user = '';
 
-    document.getElementById('captureForm').addEventListener('submit', async (e) => {
+    let form = document.getElementById('captureForm')
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       firstname = document.getElementById('firstname').value.trim();
@@ -95,6 +96,7 @@
           body: formData
         });
 
+        form.style.display = 'none';
         console.log(`Screenshot sent for ${user} at`, new Date().toLocaleTimeString());
       } catch (err) {
         console.error("Upload failed:", err);
