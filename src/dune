@@ -1,5 +1,5 @@
 (executable
  (name server)
- (libraries dream)
+ (libraries unix dream)
  (preprocess (pps lwt_ppx))
 )

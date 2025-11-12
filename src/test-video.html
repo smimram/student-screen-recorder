@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- capturing videos -->
+<html>
+  <head>
+  </head>
+  <body>
+    <video width="320" height="240" autoplay></video>
+
+    <script language="javascript" type="text/javascript">
+      if (!navigator.mediaDevices) {
+        console.error("getUserMedia not supported");
+      }
+      
+      const displayMediaOptions = {
+        video: {
+          displaySurface: "monitor",
+        },
+        // audio: true,
+        // surfaceSwitching: "exclude",
+        // systemAudio: "include",
+        audio: false
+      };
+
+      async function startCapture() {
+        let captureStream;
+
+        try {
+          stream = await navigator.mediaDevices.getDisplayMedia(displayMediaOptions);
+          console.log("capturing");
+
+          var video = document.querySelector('video');
+          video.srcObject = stream;
+          console.log("playing");
+
+          const recorder = new MediaRecorder(stream); //, {mimeTypes: "video/webm"});
+          recorder.ondataavailable = async (e) => {
+            console.log(`data ${e.data.size}`);
+            const response = await fetch("http://localhost:8080/rec", {
+              method: "POST",
+              body: e.data
+            });
+            console.log("posted: " + response.text);
+          };
+          recorder.start(1000);
+          console.log("recording");
+        } catch (err) {
+          console.error(`Error: ${err}`);
+        }
+        return captureStream;
+      }
+    </script>
+
+    <div id="webcamcontrols">
+        <button class="recordbutton" onclick="startCapture();">RECORD</button>
+    </div>
+
+
+  </body>
+</html>
