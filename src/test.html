@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- capturing videos -->
 <html>
   <head>
   </head>
@@ -14,9 +15,10 @@
         video: {
           displaySurface: "monitor",
         },
-        audio: true,
-        surfaceSwitching: "exclude",
-        systemAudio: "include",
+        // audio: true,
+        // surfaceSwitching: "exclude",
+        // systemAudio: "include",
+        audio: false
       };
 
       async function startCapture() {
@@ -31,8 +33,13 @@
           console.log("playing");
 
           const recorder = new MediaRecorder(stream); //, {mimeTypes: "video/webm"});
-          recorder.ondataavailable = (e) => {
+          recorder.ondataavailable = async (e) => {
             console.log(`data ${e.data.size}`);
+            const response = await fetch("http://localhost:8080/rec", {
+              method: "POST",
+              body: e.data
+            });
+            console.log("posted: " + response.text);
           };
           recorder.start(1000);
           console.log("recording");
