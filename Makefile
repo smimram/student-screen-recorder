@@ -1,7 +1,7 @@
 all:
 	@dune build
 
-test:
+serve:
 	@dune exec src/server.exe
 
 ci:

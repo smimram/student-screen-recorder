@@ -2,6 +2,7 @@ let videoEl = null;
 let captureStream = null;
 let firstname = '';
 let lastname = '';
+let event = '';
 let user = '';
 
 window.onload = function() {
@@ -10,6 +11,7 @@ window.onload = function() {
 
     firstname = document.getElementById('firstname').value.trim();
     lastname = document.getElementById('lastname').value.trim();
+    event = document.getElementById('event').value.trim();
     user = `${firstname} ${lastname}`;
     if (!firstname || !lastname) {
       alert("Please enter your first and last name.");
@@ -66,6 +68,7 @@ async function takeScreenshot() {
     formData.append('screenshot', blob, 'screenshot.png');
     formData.append('firstname', firstname);
     formData.append('lastname', lastname);
+    formData.append('event', event);
 
     await fetch('/upload', {
       method: 'POST',

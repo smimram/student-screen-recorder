@@ -3,8 +3,9 @@ let check_string ?(max_length=1024) s =
   assert (not @@ String.contains s '/');
   assert (not @@ String.contains s '\\')
 
-let store user screenshot =
+let store ~user ~event ~screenshot =
   let time = Unix.time () in
+  assert (String.length screenshot <= 10*1024*1024);
   let filename =
     let tm = Unix.localtime time in
     let space_to_dash s = String.init (String.length s) (fun i -> if s.[i] = ' ' then '-' else s.[i]) in
@@ -19,14 +20,44 @@ let store user screenshot =
     let lastname = canonize @@ User.lastname user in
     Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" lastname firstname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
-  let filename = Filename.concat !Config.screenshots filename in
-  let oc = open_out filename in
+  check_string event;
+  let dir = Filename.concat !Config.screenshots event in
+  if Sys.file_exists dir then assert (Sys.is_directory dir)
+  else Sys.mkdir dir 0o755;
+  let full_filename = Filename.concat dir filename in
+  let oc = open_out full_filename in
   output_string oc screenshot;
   close_out oc;
-  Dream.log "wrote: %s" filename;
-  Last.set ~time ~user ~filename
+  Dream.log "wrote: %s" full_filename;
+  Last.set ~time ~user ~event ~filename:(Filename.concat event filename)
 
 let () =
+  let ensure_admin handler request =
+    match Dream.header request "Authorization" with
+    | Some header ->
+       let check_credentials user pass =
+         user = "admin" && pass = "admin"
+       in
+       let decode_auth header =
+         match String.split_on_char ' ' header with
+         | ["Basic"; encoded] ->
+            (
+              try
+                let decoded = Base64.decode_exn encoded in
+                match String.split_on_char ':' decoded with
+                | [username; password] -> Some (username, password)
+                | _ -> None
+              with _ -> None
+            )
+         | _ -> None
+       in
+       (
+         match decode_auth header with
+         | Some (user, pass) when check_credentials user pass -> handler request
+         | _ -> Dream.respond ~status:`Unauthorized ~headers:[("WWW-Authenticate", "Basic realm=\"Restricted\"")] "Invalid credentials"
+       )
+    | None -> Dream.respond ~status:`Unauthorized ~headers:[("WWW-Authenticate", "Basic realm=\"Restricted\"")] "Authentication required"
+  in
   Dream.run
   @@ Dream.logger
   @@ Dream.router
@@ -46,9 +77,10 @@ let () =
                      let firstname = List.assoc "firstname" fields |> List.hd |> snd in
                      let lastname = List.assoc "lastname" fields |> List.hd |> snd in
                      let user = User.make ~firstname ~lastname in
+                     let event = List.assoc "event" fields |> List.hd |> snd in
                      let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
                      Dream.log "multipart from: %s" @@ User.to_string user;
-                     store user screenshot;
+                     store ~user ~event ~screenshot;
                      Dream.respond "ok"
                   | _ ->
                      print_endline "invalid multipart";
@@ -63,9 +95,10 @@ let () =
                      let firstname = List.assoc "firstname" fields in
                      let lastname = List.assoc "lastname "fields in
                      let user = User.make ~firstname ~lastname in
+                     let event = List.assoc "event" fields in
                      let screenshot = List.assoc "screenshot" fields in
                      Dream.log "form from: %s" @@ User.to_string user;
-                     store user screenshot;
+                     store ~user ~event ~screenshot;
                      Dream.respond "ok"
                   | _ ->
                      print_endline "invalid form";
@@ -76,14 +109,31 @@ let () =
              | None ->
                 failwith "no content type"
            );
-         Dream.get "/alive"
-           (fun _ ->
-             let title = "<h1>Students alive</h1>" in
-             let list = Last.alive () |> List.map fst |> List.map User.to_string |> List.map (fun s -> "<li>"^s^"</li>\n") |> String.concat "" in
-             let list = "<ul>"^list^"</ul>" in
-             let body = title ^ list in
-             let body = "<html><head></head><body>" ^ body ^ "</body>" in
-             Dream.respond body
-           )
+         Dream.scope "/admin" [ensure_admin] [
+             Dream.get "/"
+               (fun _ ->
+                 let alive =
+                   List.map
+                     (fun (e, uu) ->
+                       let uu = uu |> List.map (fun (u,_) -> User.to_string u) |> List.map HTML.li |> HTML.ol in
+                       HTML.h2 e ^ uu
+                     ) @@ Last.by_event ()
+                   |> String.concat "\n"
+                 in
+                 let alive = HTML.h1 "Students" ^ alive in
+                 let screenshots =
+                   List.map
+                     (fun (e, uu) ->
+                       let uu = uu |> List.map (fun (u,l) -> HTML.h3 (User.to_string u) ^ HTML.img ~width:"90%" ("screenshots/"^l.Last.filename)) |> String.concat "\n" in
+                       HTML.h2 e ^ uu
+                     ) @@ Last.by_event ()
+                   |> String.concat "\n"
+                 in
+                 let screenshots = HTML.h1 "Screenshots" ^ screenshots in
+                 let body = HTML.html (alive ^ screenshots) in
+                 Dream.html body
+               );
+             Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots
+           ]
        ]
 
