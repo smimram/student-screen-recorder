@@ -3,7 +3,7 @@ let check_string ?(max_length=1024) s =
   assert (not @@ String.contains s '/');
   assert (not @@ String.contains s '\\')
 
-let store ~user ~event ~screenshot =
+let store ~user ~client ~event ~screenshot =
   let time = Unix.time () in
   assert (String.length screenshot <= 10*1024*1024);
   let filename =
@@ -29,7 +29,7 @@ let store ~user ~event ~screenshot =
   output_string oc screenshot;
   close_out oc;
   Dream.log "wrote: %s" full_filename;
-  Last.set ~time ~user ~event ~filename:(Filename.concat event filename)
+  Last.set ~time ~user ~client ~event ~filename:(Filename.concat event filename)
 
 let () =
   let ensure_admin handler request =
@@ -80,7 +80,7 @@ let () =
                      let event = List.assoc "event" fields |> List.hd |> snd in
                      let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
                      Dream.log "multipart from: %s" @@ User.to_string user;
-                     store ~user ~event ~screenshot;
+                     store ~user ~client:(Dream.client response) ~event ~screenshot;
                      Dream.respond "ok"
                   | _ ->
                      print_endline "invalid multipart";
@@ -98,7 +98,7 @@ let () =
                      let event = List.assoc "event" fields in
                      let screenshot = List.assoc "screenshot" fields in
                      Dream.log "form from: %s" @@ User.to_string user;
-                     store ~user ~event ~screenshot;
+                     store ~user ~client:(Dream.client response) ~event ~screenshot;
                      Dream.respond "ok"
                   | _ ->
                      print_endline "invalid form";
@@ -116,7 +116,7 @@ let () =
                    let now = Unix.time () in
                    List.map
                      (fun (e, uu) ->
-                       let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (%ds)" (int_of_float @@ Float.round (now -. l.Last.time))) |> List.map HTML.li |> HTML.ol in
+                       let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s)" (int_of_float @@ Float.round (now -. l.Last.time)) l.Last.client) |> List.map HTML.li |> HTML.ol in
                        HTML.h2 e ^ uu
                      ) @@ Last.by_event ()
                    |> String.concat "\n"
@@ -138,4 +138,3 @@ let () =
              Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots
            ]
        ]
-

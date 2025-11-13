@@ -1,14 +1,15 @@
 type t =
   {
     time : float; (** last successful upload *)
+    client : string;
     event : string;
     filename : string; (** filename for last successful upload *)
   }
 
 let table = Hashtbl.create 100
 
-let set ~time ~(user:User.t) ~event ~filename =
-  Hashtbl.replace table user { time; event; filename }
+let set ~time ~(user:User.t) ~client ~event ~filename =
+  Hashtbl.replace table user { time; client; event; filename }
 
 let alive ?(since=120.) () =
   let t = Unix.time () in
