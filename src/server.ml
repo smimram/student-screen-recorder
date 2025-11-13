@@ -78,7 +78,7 @@ let () =
          Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
          Dream.post "/upload"
            (fun response ->
-             Printf.printf "request from %s\n%!" @@ Dream.client response;
+             (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
              match Dream.header response "content-type" with
              | Some content_type when String.starts_with ~prefix:"multipart/form-data" content_type ->
                 (
