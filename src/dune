@@ -1,5 +1,6 @@
 (executable
  (name server)
+ (public_name ssr)
  (libraries unix dream)
  (preprocess (pps lwt_ppx))
 )
