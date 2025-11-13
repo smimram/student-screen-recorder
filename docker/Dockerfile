@@ -12,7 +12,7 @@ RUN apt-get -y install libev-dev libgmp-dev libssl-dev pkg-config
 RUN opam install -y dune dream
 RUN opam clean
 
-RUN git clone https://github.com/smimram/student-screen-recorder.git ssr
+RUN git clone https://github.com/smimram/student-screen-recorder.git ssr # rebuild
 
 WORKDIR /home/ssr
 

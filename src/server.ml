@@ -32,11 +32,17 @@ let store ~user ~client ~event ~screenshot =
   Last.set ~time ~user ~client ~event ~filename:(Filename.concat event filename)
 
 let () =
+  Arg.parse
+    [
+    ]
+    (fun _ -> ())
+    "ssr [options]"
+  ;
   let ensure_admin handler request =
     match Dream.header request "Authorization" with
     | Some header ->
        let check_credentials user pass =
-         user = "admin" && pass = "admin"
+         user = "admin" && pass = !Config.admin_password
        in
        let decode_auth header =
          match String.split_on_char ' ' header with
@@ -127,13 +133,34 @@ let () =
                    List.map
                      (fun (e, uu) ->
                        let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.Last.filename) (HTML.img ~width:"400" ("screenshots/"^l.Last.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
-                       HTML.h2 e ^ HTML.div ~style:"display: flex; gap: 10px;" uu
+                       HTML.h2 e ^ HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" uu
                      ) @@ Last.by_event ()
                    |> String.concat "\n"
                  in
                  let screenshots = HTML.h1 "Screenshots" ^ screenshots in
                  let head = {|<meta http-equiv="refresh" content="60">|} in
-                 let body = HTML.html ~head (alive ^ screenshots) in
+                 let body = HTML.html ~head (HTML.a "screenshots/" "All screenshots" ^ alive ^ screenshots) in
+                 Dream.html body
+               );
+             Dream.get "/screenshots/" (fun _ ->
+                 let body =
+                   Sys.readdir !Config.screenshots
+                   |> Array.to_list
+                   |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
+                   |> List.map
+                        (fun d ->
+                          let s =
+                            Sys.readdir (Filename.concat !Config.screenshots d)
+                            |> Array.to_list
+                            |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (d^"/"^f) (HTML.img ~width:"300" (d^"/"^f) ^ HTML.br () ^ f)))
+                            |> String.concat "\n"
+                          in
+                          let s = HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" s in
+                          HTML.h2 d ^ s
+                        )
+                   |> String.concat "\n"
+                 in
+                 let body = HTML.html body in
                  Dream.html body
                );
              Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots
