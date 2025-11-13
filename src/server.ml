@@ -151,12 +151,14 @@ let () =
                  let body =
                    Sys.readdir !Config.screenshots
                    |> Array.to_list
+                   |> List.sort compare
                    |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
                    |> List.map
                         (fun d ->
                           let s =
                             Sys.readdir (Filename.concat !Config.screenshots d)
                             |> Array.to_list
+                            |> List.sort compare
                             |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (d^"/"^f) (HTML.img ~width:"300" (d^"/"^f) ^ HTML.br () ^ f)))
                             |> String.concat "\n"
                           in
