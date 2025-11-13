@@ -113,9 +113,10 @@ let () =
              Dream.get "/"
                (fun _ ->
                  let alive =
+                   let now = Unix.time () in
                    List.map
                      (fun (e, uu) ->
-                       let uu = uu |> List.map (fun (u,_) -> User.to_string u) |> List.map HTML.li |> HTML.ol in
+                       let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (%ds)" (int_of_float @@ Float.round (now -. l.Last.time))) |> List.map HTML.li |> HTML.ol in
                        HTML.h2 e ^ uu
                      ) @@ Last.by_event ()
                    |> String.concat "\n"
