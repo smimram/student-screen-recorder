@@ -1,7 +1,9 @@
+ADMIN = $(shell cat admin)
+
 all:
 
 build:
-	docker build --no-cache -t ssr .
+	docker build --no-cache -t ssr --build-arg ADMIN=$(ADMIN) .
 
 start:
 	docker run -p 8080:8080 --name=ssr ssr

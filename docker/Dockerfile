@@ -18,4 +18,4 @@ WORKDIR /home/ssr
 
 RUN eval $(opam env) && make
 
-CMD eval $(opam env) && make serve
+CMD eval $(opam env) && dune exec -- src/server.exe --admin-password ${ADMIN}
