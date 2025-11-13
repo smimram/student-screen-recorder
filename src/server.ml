@@ -58,7 +58,7 @@ let () =
        )
     | None -> Dream.respond ~status:`Unauthorized ~headers:[("WWW-Authenticate", "Basic realm=\"Restricted\"")] "Authentication required"
   in
-  Dream.run
+  Dream.run ~interface:"0.0.0.0"
   @@ Dream.logger
   @@ Dream.router
        [
