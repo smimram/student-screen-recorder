@@ -8,7 +8,7 @@ permissions: read-all
 
 jobs:
   build:
-    runs-on: unbuntu-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
