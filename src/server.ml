@@ -124,13 +124,14 @@ let () =
                  let screenshots =
                    List.map
                      (fun (e, uu) ->
-                       let uu = uu |> List.map (fun (u,l) -> HTML.h3 (User.to_string u) ^ HTML.img ~width:"90%" ("screenshots/"^l.Last.filename)) |> String.concat "\n" in
-                       HTML.h2 e ^ uu
+                       let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.Last.filename) (HTML.img ~width:"400" ("screenshots/"^l.Last.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
+                       HTML.h2 e ^ HTML.div ~style:"display: flex; gap: 10px;" uu
                      ) @@ Last.by_event ()
                    |> String.concat "\n"
                  in
                  let screenshots = HTML.h1 "Screenshots" ^ screenshots in
-                 let body = HTML.html (alive ^ screenshots) in
+                 let head = {|<meta http-equiv="refresh" content="60">|} in
+                 let body = HTML.html ~head (alive ^ screenshots) in
                  Dream.html body
                );
              Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots
