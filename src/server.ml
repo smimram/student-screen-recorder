@@ -62,6 +62,7 @@ let () =
   @@ Dream.logger
   @@ Dream.router
        [
+         Dream.get "/" @@ (fun _ -> Dream.respond "Hi people!");
          Dream.get "/test" @@ Dream.from_filesystem "static" "test.html";
          Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
          Dream.post "/upload"
