@@ -33,8 +33,13 @@ let store ~user ~client ~event ~screenshot =
 
 let () =
   Arg.parse
-    [
-    ]
+    (Arg.align
+       [
+         "--admin-password",
+         Arg.Set_string Config.admin_password,
+         " Admin password."
+       ]
+    )
     (fun _ -> ())
     "ssr [options]"
   ;
