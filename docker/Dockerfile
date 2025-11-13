@@ -18,4 +18,4 @@ WORKDIR /home/ssr
 
 RUN eval $(opam env) && make
 
-CMD make serve
+CMD eval $(opam env) && make serve
