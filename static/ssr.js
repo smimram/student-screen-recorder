@@ -1,5 +1,5 @@
-let videoEl = null;
-let captureStream = null;
+let video = null;
+let capture = null;
 let firstname = '';
 let lastname = '';
 let event = '';
@@ -24,18 +24,18 @@ window.onload = function() {
 
 async function startCapture() {
   try {
-    captureStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+    capture = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
 
     // Create hidden video element to render the screen stream
-    videoEl = document.createElement('video');
-    videoEl.style.display = 'none';
-    document.body.appendChild(videoEl);
-    videoEl.srcObject = captureStream;
+    video = document.createElement('video');
+    video.style.display = 'none';
+    document.body.appendChild(video);
+    video.srcObject = capture;
 
     // Wait until the video has loaded enough metadata
     await new Promise(resolve => {
-      videoEl.onloadedmetadata = () => {
-        videoEl.play();
+      video.onloadedmetadata = () => {
+        video.play();
         resolve();
       };
     });
@@ -49,16 +49,16 @@ async function startCapture() {
 }
 
 async function takeScreenshot() {
-  if (!videoEl || videoEl.videoWidth === 0) {
+  if (!video || video.videoWidth === 0) {
     console.warn("Video not ready yet, skipping screenshot");
     return;
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = videoEl.videoWidth;
-  canvas.height = videoEl.videoHeight;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   try {
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
