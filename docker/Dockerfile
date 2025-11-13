@@ -16,6 +16,4 @@ RUN git clone https://github.com/smimram/student-screen-recorder.git ssr
 
 WORKDIR /home/ssr
 
-RUN eval $(opam env) && make
-
-CMD eval $(opam env) && dune exec -- src/server.exe --admin-password ${ADMIN}
+CMD eval $(opam env) && git pull && make && dune exec -- src/server.exe --admin-password ${ADMIN}
