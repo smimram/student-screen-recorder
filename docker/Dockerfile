@@ -14,9 +14,8 @@ RUN opam clean
 
 RUN git clone https://github.com/smimram/student-screen-recorder.git ssr
 
-WORKDIR /home/ssr
+COPY ssr.yml /home/ssr/ssr.yml
 
-ARG ADMIN
-ENV ADMIN=${ADMIN}
+WORKDIR /home/ssr
 
 CMD ["sh", "-c", "eval $(opam env) && git pull && make && dune exec -- src/server.exe --admin-password $ADMIN"]
