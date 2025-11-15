@@ -1,3 +1,6 @@
+(** Users. *)
+
+(** A user. *)
 type t =
   {
     firstname : string;
@@ -19,4 +22,5 @@ let compare u1 u2 =
   let c = compare (String.lowercase_ascii @@ lastname u1) (String.lowercase_ascii @@ lastname u2) in
   if c <> 0 then c else compare u1 u2
 
+(** String representation of a user. *)
 let to_string u = firstname u ^ " " ^ lastname u

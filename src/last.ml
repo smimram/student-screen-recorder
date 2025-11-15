@@ -1,16 +1,21 @@
+(** Record last connections. *)
+
+(** Last connection from a user. *)
 type t =
   {
     time : float; (** last successful upload *)
-    client : string;
-    event : string;
+    client : string; (** client for connection (IP and port) *)
+    event : string; (** event for upload (which exam) *)
     filename : string; (** filename for last successful upload *)
   }
 
 let table = Hashtbl.create 100
 
+(** Set last connection. *)
 let set ~time ~(user:User.t) ~client ~event ~filename =
   Hashtbl.replace table user { time; client; event; filename }
 
+(** Users alive. *)
 let alive ?(since=120.) () =
   let t = Unix.time () in
   let compare (u1,l1) (u2,l2) =

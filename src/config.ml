@@ -1,3 +1,5 @@
+(** Configuration. *)
+
 open Extlib
 
 let admin_user = ref "admin"
@@ -6,6 +8,7 @@ let admin_password = ref "admin"
 
 let screenshots = ref "screenshots"
 
+(** Load the configuration file. *)
 let load fname =
   let yaml = File.read fname |> Yaml.of_string |> Result.get_ok in
   match yaml with
