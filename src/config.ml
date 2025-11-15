@@ -16,4 +16,5 @@ let load fname =
         | "admin_password", s -> admin_password := Yaml.Util.to_string_exn s
         | k, _ -> Printf.printf "ignoring entry: %s\n%!" k
        ) l
+  | `Null -> ()
   | _ -> assert false
