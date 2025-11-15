@@ -102,7 +102,7 @@ let () =
          [
            Dream.get "/" @@ (fun _ -> Dream.text "Hi SSR people!");
            Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
-           Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
+           (* Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html"; *)
            Dream.post "/upload"
              (fun response ->
                (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
