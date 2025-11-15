@@ -21,6 +21,11 @@ let store ~user ~client ~event ~screenshot =
     Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" lastname firstname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
   check_string event;
+  (
+    match !Config.events with
+    | Some l -> assert (List.mem event l)
+    | None -> ()
+  );
   let dir = Filename.concat !Config.screenshots event in
   if Sys.file_exists dir then assert (Sys.is_directory dir)
   else Sys.mkdir dir 0o755;

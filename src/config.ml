@@ -8,6 +8,9 @@ let admin_password = ref "admin"
 
 let screenshots = ref "screenshots"
 
+(** Open events. *)
+let events : string list option ref = ref None
+
 (** Load the configuration file. *)
 let load fname =
   let yaml = File.read fname |> Yaml.of_string |> Result.get_ok in
