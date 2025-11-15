@@ -11,7 +11,7 @@ window.onload = function() {
     e.preventDefault();
 
     server = document.getElementById('server');
-    server = server ? server.value.trim() ? '';
+    server = server ? server.value.trim() : '';
     server = server.trim();
     firstname = document.getElementById('firstname').value.trim();
     lastname = document.getElementById('lastname').value.trim();
