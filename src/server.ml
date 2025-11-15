@@ -90,7 +90,6 @@ let () =
     @@ Dream.router
          [
            Dream.get "/" @@ (fun _ -> Dream.respond "Hi SSR people!");
-           Dream.get "/test" @@ Dream.from_filesystem "static" "test.html";
            Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
            Dream.post "/upload"
              (fun response ->
@@ -187,6 +186,7 @@ let () =
                    let body = HTML.html body in
                    Dream.html body
                  );
-               Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots
+               Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots;
+               Dream.get "/test" @@ Dream.from_filesystem "static" "test.html"
              ]
          ]
