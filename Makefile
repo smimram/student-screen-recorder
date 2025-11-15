@@ -2,7 +2,7 @@ all:
 	@dune build
 
 serve:
-	@dune exec src/server.exe
+	@dune exec src/ssr.exe
 
 test:
 	@dune runtest

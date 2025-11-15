@@ -1,5 +1,5 @@
 (executable
- (name server)
+ (name ssr)
  (public_name ssr)
  (libraries unix dream yaml)
  (preprocess (pps lwt_ppx))

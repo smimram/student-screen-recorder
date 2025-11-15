@@ -1,5 +1,5 @@
 (rule
  (alias runtest)
  (deps ssr.yml)
- (action (run ../src/server.exe --test))
+ (action (run ../src/ssr.exe --test))
 )
