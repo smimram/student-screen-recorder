@@ -86,6 +86,7 @@ let () =
          Dream.post "/upload"
            (fun response ->
              (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
+             let headers = ["Access-Control-Allow-Origin", "*"] in
              match Dream.header response "content-type" with
              | Some content_type when String.starts_with ~prefix:"multipart/form-data" content_type ->
                 (
@@ -100,10 +101,10 @@ let () =
                      let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
                      Dream.log "multipart from: %s" @@ User.to_string user;
                      store ~user ~client:(Dream.client response) ~event ~screenshot;
-                     Dream.respond "ok"
+                     Dream.respond ~headers "ok"
                   | _ ->
-                     print_endline "invalid multipart";
-                     Dream.respond "invalid"
+                     Dream.log "invalid multipart";
+                     Dream.respond ~headers "invalid"
                 )
              | Some content_type when String.starts_with ~prefix:"application/x-www-form-urlencoded" content_type ->
                 (
@@ -118,10 +119,10 @@ let () =
                      let screenshot = List.assoc "screenshot" fields in
                      Dream.log "form from: %s" @@ User.to_string user;
                      store ~user ~client:(Dream.client response) ~event ~screenshot;
-                     Dream.respond "ok"
+                     Dream.respond ~headers "ok"
                   | _ ->
-                     print_endline "invalid form";
-                     Dream.respond "invalid"
+                     Dream.log "invalid form";
+                     Dream.respond ~headers "invalid"
                 )
              | Some _ ->
                 failwith "unhandled content type"
