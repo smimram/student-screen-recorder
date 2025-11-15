@@ -1,3 +1,5 @@
+(** Main SSR server. *)
+
 let check_string ?(max_length=1024) s =
   assert (String.length s <= max_length);
   assert (not @@ String.contains s '/');
@@ -5,7 +7,14 @@ let check_string ?(max_length=1024) s =
 
 let store ~user ~client ~event ~screenshot =
   let time = Unix.time () in
+  (* Ensure that the screenshot is not too big. *)
   assert (String.length screenshot <= 10*1024*1024);
+  (* At least 5 sec to avoid being flooded. *)
+  (
+    match Last.find_opt user with
+    | Some c -> assert (time >= c.time +. 5.)
+    | None -> ()
+  );
   let filename =
     let tm = Unix.localtime time in
     let space_to_dash s = String.init (String.length s) (fun i -> if s.[i] = ' ' then '-' else s.[i]) in

@@ -15,6 +15,9 @@ let table = Hashtbl.create 100
 let set ~time ~(user:User.t) ~client ~event ~filename =
   Hashtbl.replace table user { time; client; event; filename }
 
+let find_opt user =
+  Hashtbl.find_opt table user
+
 (** Users alive. *)
 let alive ?(since=120.) () =
   let t = Unix.time () in
