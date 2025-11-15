@@ -11,6 +11,7 @@ bug-reports: "https://github.com/smimram/student-screen-recorder/issues"
 depends: [
   "dune" {>= "3.9"}
   "dream"
+  "yaml"
   "odoc" {with-doc}
 ]
 build: [
