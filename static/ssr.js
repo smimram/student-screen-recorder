@@ -10,7 +10,8 @@ window.onload = function() {
   document.getElementById('ssr').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    server = document.getElementById('server').value.trim();
+    server = document.getElementById('server').value ?? '';
+    server = server.trim();
     firstname = document.getElementById('firstname').value.trim();
     lastname = document.getElementById('lastname').value.trim();
     event = document.getElementById('event').value.trim();
