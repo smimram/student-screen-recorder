@@ -1,3 +1,10 @@
+module Dream = struct
+  include Dream
+
+  let text s =
+    Dream.respond ~headers:["Content-Type", "text/plain; charset=utf-8"] s
+end
+
 module List = struct
   include List
 

@@ -1,5 +1,7 @@
 (** Main SSR server. *)
 
+open Extlib
+
 let check_string ?(max_length=1024) s =
   assert (String.length s <= max_length);
   assert (not @@ String.contains s '/');
@@ -98,7 +100,7 @@ let () =
     @@ Dream.logger
     @@ Dream.router
          [
-           Dream.get "/" @@ (fun _ -> Dream.respond "Hi SSR people!");
+           Dream.get "/" @@ (fun _ -> Dream.text "Hi SSR people!");
            Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
            Dream.post "/upload"
              (fun response ->
