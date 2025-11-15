@@ -18,4 +18,4 @@ COPY ssr.yml /home/ssr/ssr.yml
 
 WORKDIR /home/ssr
 
-CMD ["sh", "-c", "eval $(opam env) && git pull && make && dune exec -- src/server.exe --admin-password $ADMIN"]
+CMD ["sh", "-c", "eval $(opam env) && git pull && make && dune exec -- src/server.exe"]
