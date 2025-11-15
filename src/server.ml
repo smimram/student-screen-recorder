@@ -32,6 +32,13 @@ let store ~user ~client ~event ~screenshot =
   Last.set ~time ~user ~client ~event ~filename:(Filename.concat event filename)
 
 let () =
+  let conffile = "ssr.yml" in
+  if Sys.file_exists conffile then
+    (
+      Printf.printf "Loading configuration from %s... %!" conffile;
+      Config.load conffile;
+      Printf.printf "done.\n%!"
+    );
   Arg.parse
     (Arg.align
        [
@@ -47,7 +54,7 @@ let () =
     match Dream.header request "Authorization" with
     | Some header ->
        let check_credentials user pass =
-         user = "admin" && pass = !Config.admin_password
+         user = !Config.admin_user && pass = !Config.admin_password
        in
        let decode_auth header =
          match String.split_on_char ' ' header with

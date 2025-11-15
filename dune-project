@@ -14,5 +14,6 @@
  (description "A web application to regularly record screenshots.")
  (depends
    dream
+   yaml
  )
 )
