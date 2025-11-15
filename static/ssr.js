@@ -1,5 +1,6 @@
 let video = null;
 let capture = null;
+let server = '';
 let firstname = '';
 let lastname = '';
 let event = '';
@@ -9,6 +10,7 @@ window.onload = function() {
   document.getElementById('ssr').addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    server = document.getElementById('server').value.trim();
     firstname = document.getElementById('firstname').value.trim();
     lastname = document.getElementById('lastname').value.trim();
     event = document.getElementById('event').value.trim();
@@ -70,7 +72,7 @@ async function takeScreenshot() {
     formData.append('lastname', lastname);
     formData.append('event', event);
 
-    await fetch('/upload', {
+    await fetch(server+'/upload', {
       method: 'POST',
       body: formData
     });
