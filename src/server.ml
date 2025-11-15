@@ -187,6 +187,6 @@ let () =
                    Dream.html body
                  );
                Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots;
-               Dream.get "/test" @@ Dream.from_filesystem "static" "test.html"
+               Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html"
              ]
          ]
