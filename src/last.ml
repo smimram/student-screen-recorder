@@ -9,14 +9,18 @@ type t =
     filename : string; (** filename for last successful upload *)
   }
 
+let protect f =
+  let m = Mutex.create () in
+  Mutex.protect m f
+
 let table = Hashtbl.create 100
 
 (** Set last connection. *)
 let set ~time ~(user:User.t) ~client ~event ~filename =
-  Hashtbl.replace table user { time; client; event; filename }
+  protect (fun () -> Hashtbl.replace table user { time; client; event; filename })
 
 let find_opt user =
-  Hashtbl.find_opt table user
+  protect (fun () -> Hashtbl.find_opt table user)
 
 (** Users alive. *)
 let alive ?(since=120.) () =
@@ -25,7 +29,7 @@ let alive ?(since=120.) () =
     let c = User.compare u1 u2 in
     if c <> 0 then c else compare l1 l2
   in
-  Hashtbl.to_seq table |> Seq.filter (fun (_,l) -> l.time >= t -. since) |> List.of_seq |> List.sort compare
+  protect (fun () -> Hashtbl.to_seq table) |> Seq.filter (fun (_,l) -> l.time >= t -. since) |> List.of_seq |> List.sort compare
 
 let events ?since () =
   alive ?since () |> List.map snd |> List.map (fun l -> l.event) |> List.sort_uniq compare
