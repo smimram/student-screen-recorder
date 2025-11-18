@@ -2,7 +2,7 @@ ADMIN = $(shell cat admin)
 
 all:
 
-build: ssr.yml
+build: ssr.yml events.yml
 	docker build -t ssr .
 
 start:
@@ -16,7 +16,7 @@ restart:
 	-$(MAKE) stop
 	$(MAKE) start
 
-ssr.yml:
+ssr.yml events.yml:
 	touch $@
 
 -include Makefile.local

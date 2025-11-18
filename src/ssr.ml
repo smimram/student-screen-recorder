@@ -138,14 +138,46 @@ let screenshots _ =
   in
   let body = HTML.html body in
   Dream.html body
+
+let events _ =
+  let body =
+    HTML.h1 "Events"
+    ^ HTML.h2 "Add"
+    ^ {|
+       <form>
+       <label>Name:</label>
+       <input type="text" id="name" required><br>
+       <label>Begin:</label>
+       <input type="text" id="begin" required><br>
+       <label>End:</label>
+       <input type="text" id="end" required><br>
+       <button type="submit">Add</button>
+       </form>
+       |}
+    ^ HTML.h2 "List"
+    ^ (
+        Event.list ()
+        |> List.map (fun e -> e.Event.name)
+        |> List.map HTML.li
+        |> HTML.ul
+    )
+  in
+  Dream.html @@ HTML.html body
   
 let () =
   let test = ref false in
   let conffile = "ssr.yml" in
+  let eventfile = "events.yml" in
   if Sys.file_exists conffile then
     (
       Printf.printf "Loading configuration from %s... %!" conffile;
       Config.load conffile;
+      Printf.printf "done.\n%!"
+    );
+  if Sys.file_exists eventfile then
+    (
+      Printf.printf "Loading events from %s... %!" eventfile;
+      Event.load eventfile;
       Printf.printf "done.\n%!"
     );
   Arg.parse
@@ -201,5 +233,6 @@ let () =
                Dream.get "/screenshots/" screenshots;
                Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots;
                Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
+               Dream.get "/events/" events;
              ]
          ]

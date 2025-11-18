@@ -45,3 +45,17 @@ let store fname =
   in
   let yaml = `O yaml in
   Yaml.to_string yaml |> Result.get_ok |> File.write fname
+
+let list () =
+  protect (fun () -> List.sort compare !events)
+
+let exists name =
+  List.exists (fun e -> e.name = name) @@ list ()
+
+let find name =
+  List.find (fun e -> e.name = name) @@ list ()
+
+let valid name =
+  let time = Unix.time () in
+  let e = find name in
+  e.opening <= time && time <= e.closing

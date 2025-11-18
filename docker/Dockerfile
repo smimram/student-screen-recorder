@@ -14,7 +14,8 @@ RUN opam clean
 
 RUN git clone https://github.com/smimram/student-screen-recorder.git ssr
 
-COPY ssr.yml /home/ssr/ssr.yml
+COPY ssr.yml /home/ssr/
+COPY events.yml /home/ssr/
 
 WORKDIR /home/ssr
 
