@@ -22,4 +22,34 @@ module File = struct
     let s = really_input_string ic (in_channel_length ic) in
     close_in ic;
     s
+
+  let write fname s =
+    let oc = open_out fname in
+    output_string oc s;
+    close_out oc
+end
+
+module Time = struct
+  let of_string s =
+    let year, month, day, hour, min, sec = Scanf.sscanf s "%d-%d-%d %d:%d" (fun y m d h mi -> (y, m, d, h, mi, 0)) in
+    let tm =
+      {
+        Unix.
+        tm_sec = sec;
+        tm_min = min;
+        tm_hour = hour;
+        tm_mday = day;
+        tm_mon = month - 1;
+        tm_year = year - 1900;
+        tm_wday = 0;
+        tm_yday = 0;
+        tm_isdst = false;
+      }
+    in
+    fst @@ Unix.mktime tm
+
+  let to_string t =
+    let open Unix in
+    let tm = Unix.gmtime t in
+    Printf.sprintf "%d-%d-%d %d:%d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min
 end
