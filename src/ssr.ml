@@ -47,6 +47,98 @@ let store ~user ~client ~event ~screenshot =
   Dream.log "wrote: %s" full_filename;
   Last.set ~time ~user ~client ~event ~filename:(Filename.concat event filename)
 
+let upload response =
+  (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
+  let headers = ["Access-Control-Allow-Origin", "*"] in
+  match Dream.header response "content-type" with
+  | Some content_type when String.starts_with ~prefix:"multipart/form-data" content_type ->
+     (
+       let%lwt parts = Dream.multipart ~csrf:false response in
+       match parts with
+       | `Ok fields ->
+          Dream.log "multipart fields: %s" @@ (String.concat ", " @@ List.map fst fields);
+          let firstname = List.assoc "firstname" fields |> List.hd |> snd in
+          let lastname = List.assoc "lastname" fields |> List.hd |> snd in
+          let user = User.make ~firstname ~lastname in
+          let event = List.assoc "event" fields |> List.hd |> snd in
+          let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
+          Dream.log "multipart from: %s" @@ User.to_string user;
+          store ~user ~client:(Dream.client response) ~event ~screenshot;
+          Dream.respond ~headers "ok"
+       | _ ->
+          Dream.log "invalid multipart";
+          Dream.respond ~headers "invalid"
+     )
+  | Some content_type when String.starts_with ~prefix:"application/x-www-form-urlencoded" content_type ->
+     (
+       let%lwt form = Dream.form ~csrf:false response in
+       match form with
+       | `Ok fields ->
+          Dream.log "form fields: %s" (String.concat ", " @@ List.map fst fields);
+          let firstname = List.assoc "firstname" fields in
+          let lastname = List.assoc "lastname "fields in
+          let user = User.make ~firstname ~lastname in
+          let event = List.assoc "event" fields in
+          let screenshot = List.assoc "screenshot" fields in
+          Dream.log "form from: %s" @@ User.to_string user;
+          store ~user ~client:(Dream.client response) ~event ~screenshot;
+          Dream.respond ~headers "ok"
+       | _ ->
+          Dream.log "invalid form";
+          Dream.respond ~headers "invalid"
+     )
+  | Some _ ->
+     failwith "unhandled content type"
+  | None ->
+     failwith "no content type"
+
+let admin _ =
+  let alive =
+    let now = Unix.time () in
+    List.map
+      (fun (e, uu) ->
+        let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s)" (int_of_float @@ Float.round (now -. l.Last.time)) l.Last.client) |> List.map HTML.li |> HTML.ol in
+        HTML.h2 e ^ uu
+      ) @@ Last.by_event ()
+    |> String.concat "\n"
+  in
+  let alive = HTML.h1 "Students" ^ alive in
+  let screenshots =
+    List.map
+      (fun (e, uu) ->
+        let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.Last.filename) (HTML.img ~width:"400" ("screenshots/"^l.Last.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
+        HTML.h2 e ^ HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" uu
+      ) @@ Last.by_event ()
+    |> String.concat "\n"
+  in
+  let screenshots = HTML.h1 "Screenshots" ^ screenshots in
+  let head = {|<meta http-equiv="refresh" content="60">|} in
+  let body = HTML.html ~head (HTML.a "screenshots/" "All screenshots" ^ alive ^ screenshots) in
+  Dream.html body
+
+let screenshots _ =
+  let body =
+    Sys.readdir !Config.screenshots
+    |> Array.to_list
+    |> List.sort compare
+    |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
+    |> List.map
+         (fun d ->
+           let s =
+             Sys.readdir (Filename.concat !Config.screenshots d)
+             |> Array.to_list
+             |> List.sort compare
+             |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (d^"/"^f) (HTML.img ~width:"300" (d^"/"^f) ^ HTML.br () ^ f)))
+             |> String.concat "\n"
+           in
+           let s = HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" s in
+           HTML.h2 d ^ s
+         )
+    |> String.concat "\n"
+  in
+  let body = HTML.html body in
+  Dream.html body
+  
 let () =
   let test = ref false in
   let conffile = "ssr.yml" in
@@ -103,102 +195,11 @@ let () =
            Dream.get "/" @@ (fun _ -> Dream.text "Hi SSR people!");
            Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
            (* Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html"; *)
-           Dream.post "/upload"
-             (fun response ->
-               (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
-               let headers = ["Access-Control-Allow-Origin", "*"] in
-               match Dream.header response "content-type" with
-               | Some content_type when String.starts_with ~prefix:"multipart/form-data" content_type ->
-                  (
-                    let%lwt parts = Dream.multipart ~csrf:false response in
-                    match parts with
-                    | `Ok fields ->
-                       Dream.log "multipart fields: %s" @@ (String.concat ", " @@ List.map fst fields);
-                       let firstname = List.assoc "firstname" fields |> List.hd |> snd in
-                       let lastname = List.assoc "lastname" fields |> List.hd |> snd in
-                       let user = User.make ~firstname ~lastname in
-                       let event = List.assoc "event" fields |> List.hd |> snd in
-                       let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
-                       Dream.log "multipart from: %s" @@ User.to_string user;
-                       store ~user ~client:(Dream.client response) ~event ~screenshot;
-                       Dream.respond ~headers "ok"
-                    | _ ->
-                       Dream.log "invalid multipart";
-                       Dream.respond ~headers "invalid"
-                  )
-               | Some content_type when String.starts_with ~prefix:"application/x-www-form-urlencoded" content_type ->
-                  (
-                    let%lwt form = Dream.form ~csrf:false response in
-                    match form with
-                    | `Ok fields ->
-                       Dream.log "form fields: %s" (String.concat ", " @@ List.map fst fields);
-                       let firstname = List.assoc "firstname" fields in
-                       let lastname = List.assoc "lastname "fields in
-                       let user = User.make ~firstname ~lastname in
-                       let event = List.assoc "event" fields in
-                       let screenshot = List.assoc "screenshot" fields in
-                       Dream.log "form from: %s" @@ User.to_string user;
-                       store ~user ~client:(Dream.client response) ~event ~screenshot;
-                       Dream.respond ~headers "ok"
-                    | _ ->
-                       Dream.log "invalid form";
-                       Dream.respond ~headers "invalid"
-                  )
-               | Some _ ->
-                  failwith "unhandled content type"
-               | None ->
-                  failwith "no content type"
-             );
+           Dream.post "/upload" upload;
            Dream.scope "/admin" [ensure_admin] [
-               Dream.get "/"
-                 (fun _ ->
-                   let alive =
-                     let now = Unix.time () in
-                     List.map
-                       (fun (e, uu) ->
-                         let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s)" (int_of_float @@ Float.round (now -. l.Last.time)) l.Last.client) |> List.map HTML.li |> HTML.ol in
-                         HTML.h2 e ^ uu
-                       ) @@ Last.by_event ()
-                     |> String.concat "\n"
-                   in
-                   let alive = HTML.h1 "Students" ^ alive in
-                   let screenshots =
-                     List.map
-                       (fun (e, uu) ->
-                         let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.Last.filename) (HTML.img ~width:"400" ("screenshots/"^l.Last.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
-                         HTML.h2 e ^ HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" uu
-                       ) @@ Last.by_event ()
-                     |> String.concat "\n"
-                   in
-                   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
-                   let head = {|<meta http-equiv="refresh" content="60">|} in
-                   let body = HTML.html ~head (HTML.a "screenshots/" "All screenshots" ^ alive ^ screenshots) in
-                   Dream.html body
-                 );
-               Dream.get "/screenshots/" (fun _ ->
-                   let body =
-                     Sys.readdir !Config.screenshots
-                     |> Array.to_list
-                     |> List.sort compare
-                     |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
-                     |> List.map
-                          (fun d ->
-                            let s =
-                              Sys.readdir (Filename.concat !Config.screenshots d)
-                              |> Array.to_list
-                              |> List.sort compare
-                              |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (d^"/"^f) (HTML.img ~width:"300" (d^"/"^f) ^ HTML.br () ^ f)))
-                              |> String.concat "\n"
-                            in
-                            let s = HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" s in
-                            HTML.h2 d ^ s
-                          )
-                     |> String.concat "\n"
-                   in
-                   let body = HTML.html body in
-                   Dream.html body
-                 );
+               Dream.get "/" admin;
+               Dream.get "/screenshots/" screenshots;
                Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots;
-               Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html"
+               Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
              ]
          ]
