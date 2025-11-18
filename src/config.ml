@@ -6,6 +6,8 @@ let admin_user = ref "admin"
 
 let admin_password = ref "admin"
 
+let check_events = ref false
+
 let screenshots = ref "screenshots"
 
 (** Open events. *)

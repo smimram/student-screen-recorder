@@ -55,7 +55,6 @@ let exists name =
 let find name =
   List.find (fun e -> e.name = name) @@ list ()
 
-let valid name =
-  let time = Unix.time () in
+let valid time name =
   let e = find name in
   e.opening <= time && time <= e.closing

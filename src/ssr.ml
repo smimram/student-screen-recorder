@@ -9,6 +9,12 @@ let check_string ?(max_length=1024) s =
 
 let store ~user ~client ~event ~screenshot =
   let time = Unix.time () in
+  (* Ensure that the event is valid. *)
+  if !Config.check_events then
+    (
+      assert (Event.exists event);
+      assert (Event.valid time event)
+    );
   (* Ensure that the screenshot is not too big. *)
   assert (String.length screenshot <= 10*1024*1024);
   (* At least 5 sec to avoid being flooded. *)
