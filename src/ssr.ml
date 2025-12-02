@@ -3,6 +3,7 @@
 open Extlib
 
 let check_string ?(max_length=1024) s =
+  assert (not @@ String.starts_with ~prefix:"." s);
   assert (String.length s <= max_length);
   assert (not @@ String.contains s '/');
   assert (not @@ String.contains s '\\')
