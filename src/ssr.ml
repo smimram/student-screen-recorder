@@ -51,7 +51,7 @@ let store ~user ~client ~event ~screenshot =
   let oc = open_out full_filename in
   output_string oc screenshot;
   close_out oc;
-  Dream.log "wrote: %s" full_filename;
+  Dream.log "Wrote %s" full_filename;
   Last.set ~time ~user ~client ~event ~filename:(Filename.concat event filename)
 
 let upload response =
@@ -63,17 +63,17 @@ let upload response =
        let%lwt parts = Dream.multipart ~csrf:false response in
        match parts with
        | `Ok fields ->
-          Dream.log "multipart fields: %s" @@ (String.concat ", " @@ List.map fst fields);
+          Dream.log "Multipart form fields: %s" @@ (String.concat ", " @@ List.map fst fields);
           let firstname = List.assoc "firstname" fields |> List.hd |> snd in
           let lastname = List.assoc "lastname" fields |> List.hd |> snd in
           let user = User.make ~firstname ~lastname in
           let event = List.assoc "event" fields |> List.hd |> snd in
           let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
-          Dream.log "multipart from: %s" @@ User.to_string user;
+          Dream.log "Form from: %s (%s)" (User.to_string user) event;
           store ~user ~client:(Dream.client response) ~event ~screenshot;
           Dream.respond ~headers "ok"
        | _ ->
-          Dream.log "invalid multipart";
+          Dream.log "Invalid multipart";
           Dream.respond ~headers "invalid"
      )
   | Some content_type when String.starts_with ~prefix:"application/x-www-form-urlencoded" content_type ->
@@ -81,17 +81,17 @@ let upload response =
        let%lwt form = Dream.form ~csrf:false response in
        match form with
        | `Ok fields ->
-          Dream.log "form fields: %s" (String.concat ", " @@ List.map fst fields);
+          Dream.log "Form fields: %s" (String.concat ", " @@ List.map fst fields);
           let firstname = List.assoc "firstname" fields in
           let lastname = List.assoc "lastname "fields in
           let user = User.make ~firstname ~lastname in
           let event = List.assoc "event" fields in
           let screenshot = List.assoc "screenshot" fields in
-          Dream.log "form from: %s" @@ User.to_string user;
+          Dream.log "Form from %s (%s)" (User.to_string user) event;
           store ~user ~client:(Dream.client response) ~event ~screenshot;
           Dream.respond ~headers "ok"
        | _ ->
-          Dream.log "invalid form";
+          Dream.log "Invalid form";
           Dream.respond ~headers "invalid"
      )
   | Some _ ->
