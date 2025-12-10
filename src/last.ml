@@ -4,7 +4,8 @@
 type t =
   {
     time : float; (** last successful upload *)
-    client : string; (** client for connection (IP and port) *)
+    ip : string; (** IP for last connection *)
+    port : int; (** port for last connection *)
     event : string; (** event for upload (which exam) *)
     filename : string; (** filename for last successful upload *)
   }
@@ -16,8 +17,8 @@ let protect f =
 let table = Hashtbl.create 100
 
 (** Set last connection. *)
-let set ~time ~(user:User.t) ~client ~event ~filename =
-  protect (fun () -> Hashtbl.replace table user { time; client; event; filename })
+let set ~time ~(user:User.t) ~ip ~port ~event ~filename =
+  protect (fun () -> Hashtbl.replace table user { time; ip; port; event; filename })
 
 let find_opt user =
   protect (fun () -> Hashtbl.find_opt table user)

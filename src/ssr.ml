@@ -52,7 +52,16 @@ let store ~user ~client ~event ~screenshot =
   output_string oc screenshot;
   close_out oc;
   Dream.log "Wrote %s" full_filename;
-  Last.set ~time ~user ~client ~event ~filename:(Filename.concat event filename)
+  let ip, port =
+    match String.index_from_opt client 0 ':' with
+    | Some n ->
+       let ip = String.sub client 0 n in
+       let n = n+1 in
+       let port = String.sub client n (String.length client - n) |> int_of_string_opt |> Option.value ~default:0 in
+       ip, port
+    | None -> client, 0
+  in
+  Last.set ~time ~user ~ip ~port ~event ~filename:(Filename.concat event filename)
 
 let upload response =
   (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
@@ -104,7 +113,8 @@ let admin _ =
     let now = Unix.time () in
     List.map
       (fun (e, uu) ->
-        let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s)" (int_of_float @@ Float.round (now -. l.Last.time)) l.Last.client) |> List.map HTML.li |> HTML.ol in
+        let open Last in
+        let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ol in
         HTML.h2 e ^ uu
       ) @@ Last.by_event ()
     |> String.concat "\n"
@@ -113,7 +123,8 @@ let admin _ =
   let screenshots =
     List.map
       (fun (e, uu) ->
-        let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.Last.filename) (HTML.img ~width:"400" ("screenshots/"^l.Last.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
+        let open Last in
+        let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.filename) (HTML.img ~width:"400" ("screenshots/"^l.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
         HTML.h2 e ^ HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" uu
       ) @@ Last.by_event ()
     |> String.concat "\n"
