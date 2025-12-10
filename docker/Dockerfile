@@ -19,4 +19,4 @@ COPY events.yml /home/ssr/
 
 WORKDIR /home/ssr
 
-CMD ["sh", "-c", "eval $(opam env) && git pull && make && dune exec -- src/ssr.exe | tee -a screenshots/ssr.log"]
+CMD ["sh", "-c", "eval $(opam env) && git pull && make && dune exec -- src/ssr.exe 2>&1 | tee -a screenshots/ssr.log"]
