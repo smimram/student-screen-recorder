@@ -132,6 +132,7 @@ let admin _ =
               (fun (ip,uu) ->
                 Printf.sprintf "%s: %s" ip (String.concat ", " @@ List.map User.to_string uu)
               ) byip
+            |> List.map HTML.li
             |> HTML.ul
           )
     in
