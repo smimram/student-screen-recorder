@@ -190,16 +190,13 @@ let () =
   Arg.parse
     (Arg.align
        [
-         "--admin-password",
-         Arg.Set_string Config.admin_password,
-         " Admin password.";
-         "--test",
-         Arg.Set test,
-         " Only run tests."
+         "--admin-password", Arg.Set_string Config.admin_password, " Admin password.";
+         "--test", Arg.Set test, " Only run tests.";
        ]
     )
     (fun _ -> ())
     "ssr [options]";
+
   let ensure_admin handler request =
     match Dream.header request "Authorization" with
     | Some header ->
