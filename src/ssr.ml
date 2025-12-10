@@ -78,7 +78,7 @@ let upload response =
           let user = User.make ~firstname ~lastname in
           let event = List.assoc "event" fields |> List.hd |> snd in
           let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
-          Dream.log "Form from: %s (%s)" (User.to_string user) event;
+          Dream.log "Form from %s (%s)" (User.to_string user) event;
           store ~user ~client:(Dream.client response) ~event ~screenshot;
           Dream.respond ~headers "ok"
        | _ ->
