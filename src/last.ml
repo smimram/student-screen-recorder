@@ -39,3 +39,15 @@ let by_event ?since () =
   let events = events ?since () in
   let alive = alive ?since () in
   List.map (fun e -> e, List.filter (fun (_,l) -> l.event = e) alive) events
+
+let by_ip ?since () =
+  let module M = Map.Make(String) in
+  let alive = alive ?since () in
+  let m = ref M.empty in
+  List.iter
+    (fun (u,l) ->
+      let ip = l.ip in
+      let uu = Option.value ~default:[] @@ M.find_opt ip !m in
+      m := M.add ip (u::uu) !m
+    ) alive;
+  M.to_list !m
