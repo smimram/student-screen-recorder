@@ -5,6 +5,9 @@ all:
 build: ssr.yml events.yml
 	docker build -t ssr .
 
+rebuild: ssr.yml events.yml
+	docker build -t ssr . --no-cache
+
 start:
 	docker run -p 8080:8080 --name=ssr ssr
 

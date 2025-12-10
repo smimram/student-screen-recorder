@@ -19,6 +19,8 @@ let h2 s = "<h2>" ^ s ^ "</h2>\n"
 
 let h3 s = "<h3>" ^ s ^ "</h3>\n"
 
+let p s = "<p>" ^ s ^ "</p>\n"
+
 let div ?style s =
   let style =
     match style with

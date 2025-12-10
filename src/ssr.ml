@@ -119,6 +119,24 @@ let admin _ =
       ) @@ Last.by_event ()
     |> String.concat "\n"
   in
+  let warnings =
+    let byip =
+      Last.by_ip ()
+      |> List.filter (fun (_,uu) -> List.length uu > 1)
+    in
+    let warnings =
+      if byip = [] then "" else
+        HTML.p "Users with same IP:" ^
+          (
+            List.map
+              (fun (ip,uu) ->
+                Printf.sprintf "%s: %s" ip (String.concat ", " @@ List.map User.to_string uu)
+              ) byip
+            |> HTML.ul
+          )
+    in
+    if warnings = "" then "" else HTML.h1 "Warnings" ^ warnings
+  in
   let alive = HTML.h1 "Students" ^ alive in
   let screenshots =
     List.map
@@ -131,7 +149,7 @@ let admin _ =
   in
   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
   let head = {|<meta http-equiv="refresh" content="60">|} in
-  let body = HTML.html ~head (HTML.a "screenshots/" "All screenshots" ^ alive ^ screenshots) in
+  let body = HTML.html ~head (HTML.a "screenshots/" "All screenshots" ^ warnings ^ alive ^ screenshots) in
   Dream.html body
 
 let screenshots _ =
