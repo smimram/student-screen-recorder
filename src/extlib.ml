@@ -8,6 +8,9 @@ end
 module List = struct
   include List
 
+  let diff l1 l2 =
+    List.filter (fun x -> not (List.mem x l2)) l1
+
   let filter_map_pairs f l =
     let rec aux = function
       | x::l -> (List.filter_map (f x) l)@(aux l)

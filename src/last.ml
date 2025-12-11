@@ -1,5 +1,7 @@
 (** Record last connections. *)
 
+open Extlib
+
 (** Last connection from a user. *)
 type t =
   {
@@ -24,13 +26,22 @@ let find_opt user =
   protect (fun () -> Hashtbl.find_opt table user)
 
 (** Users alive. *)
-let alive ?(since=120.) () =
+let alive ?(since=60.) () =
   let t = Unix.time () in
   let compare (u1,l1) (u2,l2) =
     let c = User.compare u1 u2 in
     if c <> 0 then c else compare l1 l2
   in
   protect (fun () -> Hashtbl.to_seq table) |> Seq.filter (fun (_,l) -> l.time >= t -. since) |> List.of_seq |> List.sort compare
+
+(** Users who recently went away. *)
+let gone ?since_alive ?(since_gone=3600.) ?event () =
+  let gone = alive ~since:since_gone () in
+  let alive = alive ?since:since_alive () in
+  let gone = List.diff gone alive in
+  match event with
+  | Some e -> List.filter (fun (_,l) -> l.event = e) gone
+  | None -> gone
 
 let events ?since () =
   alive ?since () |> List.map snd |> List.map (fun l -> l.event) |> List.sort_uniq compare

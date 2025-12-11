@@ -115,7 +115,14 @@ let admin _ =
       (fun (e, uu) ->
         let open Last in
         let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ol in
-        HTML.h2 e ^ uu
+        let gone =
+          let gone = Last.gone ~event:e () in
+          if gone = [] then ""
+          else
+            HTML.p "Recently gone:"
+            ^ (gone |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ul)
+        in
+        HTML.h2 e ^ uu ^ gone
       ) @@ Last.by_event ()
     |> String.concat "\n"
   in
