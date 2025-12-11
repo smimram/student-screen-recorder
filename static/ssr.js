@@ -30,6 +30,11 @@ async function startCapture() {
   try {
     capture = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
 
+    capture.getVideoTracks()[0].addEventListener("ended", () => {
+      console.log("Screen sharing permission lost or screen sharing stopped.");
+      video = null;
+    });
+
     // Create hidden video element to render the screen stream
     video = document.createElement('video');
     video.style.display = 'none';
