@@ -51,7 +51,8 @@ async function startCapture() {
 
     console.log(`Screen capture started for: ${user}`);
     takeScreenshot();
-    setInterval(takeScreenshot, 15 * 1000);
+    // Send a screenshot every 10 seconds
+    setInterval(takeScreenshot, 10 * 1000);
   } catch (err) {
     console.error("Error starting capture:", err);
   }
