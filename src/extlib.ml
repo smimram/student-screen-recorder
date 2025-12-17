@@ -1,3 +1,5 @@
+let failwith fmt = Printf.ksprintf failwith fmt
+
 module Dream = struct
   include Dream
 

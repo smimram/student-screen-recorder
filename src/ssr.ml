@@ -13,15 +13,15 @@ let store ~user ~client ~event ~screenshot =
   (* Ensure that the event is valid. *)
   if !Config.check_events then
     (
-      assert (Event.exists event);
-      assert (Event.valid time event)
+      if not (Event.exists event) then failwith "Ignoring screenshot from %s, event %s does not exist." (User.to_string user) event;
+      if not (Event.valid time event) then failwith "Ignoring screenshot from %s, invalid time for event %s" (User.to_string user) event;
     );
   (* Ensure that the screenshot is not too big. *)
   assert (String.length screenshot <= 10*1024*1024);
   (* At least 5 sec to avoid being flooded. *)
   (
     match Last.find_opt user with
-    | Some c -> assert (time >= c.time +. 5.)
+    | Some c -> if time < c.time +. 5. then failwith "Ignoring screenshot from %s, last was only %.02fs ago" (User.to_string user) (time -. c.time)
     | None -> ()
   );
   let filename =
