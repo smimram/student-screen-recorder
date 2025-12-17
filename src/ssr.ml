@@ -2,6 +2,14 @@
 
 open Extlib
 
+module HTML = struct
+  include HTML
+
+  let html ?(head="") body =
+    let head = {|<link rel="stylesheet" href="/ssr.css" />|} ^ head in
+    html ~head body
+end
+
 let m = Mutex.create ()
 
 let check_string ?(max_length=1024) s =
