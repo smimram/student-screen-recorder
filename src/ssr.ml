@@ -181,6 +181,7 @@ let admin _ =
     List.map HTML.li
       [
         HTML.a "screenshots/" "All screenshots";
+        HTML.a "events/" "Events";
         HTML.a "test/" "Test";
       ]
     |> HTML.ul
@@ -295,7 +296,7 @@ let () =
          [
            Dream.get "/" @@ (fun _ -> Dream.text "Hi SSR people!");
            Dream.get "/ssr.js" @@ Dream.from_filesystem "static" "ssr.js";
-           (* Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html"; *)
+           Dream.get "/ssr.css" @@ Dream.from_filesystem "static" "ssr.css";
            Dream.post "/upload" upload;
            Dream.scope "/admin" [ensure_admin] [
                Dream.get "/" admin;
