@@ -15,5 +15,6 @@
  (depends
    dream
    yaml
+   csv
  )
 )
