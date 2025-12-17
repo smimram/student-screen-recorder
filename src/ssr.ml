@@ -2,6 +2,8 @@
 
 open Extlib
 
+let m = Mutex.create ()
+
 let check_string ?(max_length=1024) s =
   assert (not @@ String.starts_with ~prefix:"." s);
   assert (String.length s <= max_length);
@@ -24,8 +26,8 @@ let store ~user ~client ~event ~screenshot =
     | Some c -> if time < c.time +. 5. then failwith "Ignoring screenshot from %s, last was only %.02fs ago" (User.to_string user) (time -. c.time)
     | None -> ()
   );
+  let tm = Unix.localtime time in
   let filename =
-    let tm = Unix.localtime time in
     let space_to_dash s = String.init (String.length s) (fun i -> if s.[i] = ' ' then '-' else s.[i]) in
     let canonize s =
       s
@@ -45,13 +47,23 @@ let store ~user ~client ~event ~screenshot =
     | None -> ()
   );
   let dir = Filename.concat !Config.screenshots event in
-  if Sys.file_exists dir then assert (Sys.is_directory dir)
-  else Sys.mkdir dir 0o755;
+  if Sys.file_exists dir then assert (Sys.is_directory dir) else Sys.mkdir dir 0o755;
   let full_filename = Filename.concat dir filename in
   let oc = open_out full_filename in
   output_string oc screenshot;
   close_out oc;
   Dream.log "Wrote %s" full_filename;
+  (* TODO: per-event mutex? *)
+  Mutex.protect m
+    (fun () ->
+      let csv = Filename.concat dir "ssr.csv" in
+      (* Dream.log "Writing to %s." csv; *)
+      let header = not (Sys.file_exists csv) in
+      Out_channel.with_open_gen [Open_wronly; Open_creat; Open_append] 0o644 csv (fun oc ->
+          if header then output_string oc "Lastname,Firstname,Date,Time,Filename\n";
+          Printf.ksprintf (output_string oc) "%s,%s,%04d/%02d/%02d,%02d:%02d:%02d,%s\n" (User.lastname user) (User.firstname user) (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec filename
+        );
+    );
   let ip, port =
     match String.index_from_opt client 0 ':' with
     | Some n ->
@@ -157,7 +169,15 @@ let admin _ =
   in
   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
   let head = {|<meta http-equiv="refresh" content="60">|} in
-  let body = HTML.html ~head (HTML.a "screenshots/" "All screenshots" ^ warnings ^ alive ^ screenshots) in
+  let links =
+    List.map HTML.li
+      [
+        HTML.a "screenshots/" "All screenshots";
+        HTML.a "test/" "Test";
+      ]
+    |> HTML.ul
+  in
+  let body = HTML.html ~head (links ^ warnings ^ alive ^ screenshots) in
   Dream.html body
 
 let screenshots _ =
