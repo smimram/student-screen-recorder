@@ -1,6 +1,6 @@
 (executable
  (name ssr)
  (public_name ssr)
- (libraries unix dream yaml)
+ (libraries unix dream yaml csv)
  (preprocess (pps lwt_ppx))
 )

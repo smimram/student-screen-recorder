@@ -57,11 +57,19 @@ let store ~user ~client ~event ~screenshot =
   Mutex.protect m
     (fun () ->
       let csv = Filename.concat dir "ssr.csv" in
-      (* Dream.log "Writing to %s." csv; *)
       let header = not (Sys.file_exists csv) in
-      Out_channel.with_open_gen [Open_wronly; Open_creat; Open_append] 0o644 csv (fun oc ->
-          if header then output_string oc "Lastname,Firstname,Date,Time,Filename\n";
-          Printf.ksprintf (output_string oc) "%s,%s,%04d/%02d/%02d,%02d:%02d:%02d,%s\n" (User.lastname user) (User.firstname user) (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec filename
+      Out_channel.with_open_gen [Open_wronly; Open_creat; Open_append] 0o644 csv
+        (fun oc ->
+          let csv = Csv.to_channel oc in
+          if header then Csv.output_record csv ["Lastname"; "Firstname"; "Date"; "Time"; "Filename"];
+          Csv.output_record csv
+            [
+              User.lastname user;
+              User.firstname user;
+              Printf.sprintf "%04d/%02d/%02d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday;
+              Printf.sprintf "%02d:%02d:%02d" tm.tm_hour tm.tm_min tm.tm_sec;
+              filename
+            ]
         );
     );
   let ip, port =
