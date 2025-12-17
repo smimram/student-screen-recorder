@@ -9,7 +9,7 @@ WORKDIR /home
 RUN opam init -y --bare --disable-sandboxing
 RUN opam switch create system --empty
 RUN apt-get -y install libev-dev libgmp-dev libssl-dev pkg-config
-RUN opam install -y dune dream yaml
+RUN opam install -y dune dream yaml csv
 RUN opam clean
 
 RUN git clone https://github.com/smimram/student-screen-recorder.git ssr
