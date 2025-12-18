@@ -61,25 +61,6 @@ let store ~user ~client ~event ~screenshot =
   output_string oc screenshot;
   close_out oc;
   Dream.log "Wrote %s" full_filename;
-  (* TODO: per-event mutex? *)
-  Mutex.protect m
-    (fun () ->
-      let csv = Filename.concat dir "ssr.csv" in
-      let header = not (Sys.file_exists csv) in
-      Out_channel.with_open_gen [Open_wronly; Open_creat; Open_append] 0o644 csv
-        (fun oc ->
-          let csv = Csv.to_channel oc in
-          if header then Csv.output_record csv ["Lastname"; "Firstname"; "Date"; "Time"; "Filename"];
-          Csv.output_record csv
-            [
-              User.lastname user;
-              User.firstname user;
-              Printf.sprintf "%04d/%02d/%02d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday;
-              Printf.sprintf "%02d:%02d:%02d" tm.tm_hour tm.tm_min tm.tm_sec;
-              filename
-            ]
-        );
-    );
   let ip, port =
     match String.index_from_opt client 0 ':' with
     | Some n ->
@@ -89,6 +70,27 @@ let store ~user ~client ~event ~screenshot =
        ip, port
     | None -> client, 0
   in
+  (* TODO: per-event mutex? *)
+  Mutex.protect m
+    (fun () ->
+      let csv = Filename.concat dir "ssr.csv" in
+      let header = not (Sys.file_exists csv) in
+      Out_channel.with_open_gen [Open_wronly; Open_creat; Open_append] 0o644 csv
+        (fun oc ->
+          let csv = Csv.to_channel oc in
+          if header then Csv.output_record csv ["Lastname"; "Firstname"; "Date"; "Time"; "IP"; "Port"; "Filename"];
+          Csv.output_record csv
+            [
+              User.lastname user;
+              User.firstname user;
+              Printf.sprintf "%04d/%02d/%02d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday;
+              Printf.sprintf "%02d:%02d:%02d" tm.tm_hour tm.tm_min tm.tm_sec;
+              ip;
+              string_of_int port;
+              filename
+            ]
+        );
+    );
   Last.set ~time ~user ~ip ~port ~event ~filename:(Filename.concat event filename)
 
 let upload response =
