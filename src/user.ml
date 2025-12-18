@@ -23,4 +23,4 @@ let compare u1 u2 =
   if c <> 0 then c else compare u1 u2
 
 (** String representation of a user. *)
-let to_string u = firstname u ^ " " ^ lastname u
+let to_string u = lastname u ^ " " ^ firstname u
