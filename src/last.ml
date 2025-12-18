@@ -43,14 +43,17 @@ let gone ?since_alive ?(since_gone=3600.) ?event () =
   | Some e -> List.filter (fun (_,l) -> l.event = e) gone
   | None -> gone
 
-let events ?since () =
-  alive ?since () |> List.map snd |> List.map (fun l -> l.event) |> List.sort_uniq compare
+(** Recent events. *)
+let events ?(since=3600.) () =
+  alive ~since () |> List.map snd |> List.map (fun l -> l.event) |> List.sort_uniq compare
 
+(** Alive people by event. *)
 let by_event ?since () =
   let events = events ?since () in
   let alive = alive ?since () in
   List.map (fun e -> e, List.filter (fun (_,l) -> l.event = e) alive) events
 
+(** Alive people by IP. *)
 let by_ip ?since () =
   let module M = Map.Make(String) in
   let alive = alive ?since () in
