@@ -18,6 +18,7 @@ let check_string ?(max_length=1024) s =
   assert (not @@ String.contains s '/');
   assert (not @@ String.contains s '\\')
 
+(** Store screenshot. *)
 let store ~user ~client ~event ~screenshot =
   let time = Unix.time () in
   (* Ensure that the event is valid. *)
@@ -93,6 +94,7 @@ let store ~user ~client ~event ~screenshot =
     );
   Last.set ~time ~user ~ip ~port ~event ~filename:(Filename.concat event filename)
 
+(** Handle screenshot upload. *)
 let upload response =
   (* Printf.printf "request from %s\n%!" @@ Dream.client response; *)
   let headers = ["Access-Control-Allow-Origin", "*"] in
@@ -186,6 +188,37 @@ let admin _ =
     |> String.concat "\n"
   in
   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
+  let events =
+    let events =
+      Sys.readdir !Config.screenshots
+      |> Array.to_list
+      |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
+      |> List.map (fun event ->
+             let dir = Filename.concat !Config.screenshots event in
+             let l =
+               let csv = Filename.concat dir "ssr.csv" in
+               if not (Sys.file_exists csv) then "" else
+                 File.read csv
+                 |> Csv.of_string
+                 |> Csv.Rows.input_all
+                 |> List.map (fun row ->
+                        let find = Csv.Row.find row in
+                        let firstname = find "Firstname" in
+                        let lastname = find "Lastname" in
+                        let u = User.make ~firstname ~lastname in
+                        u
+                      )
+                 |> List.sort_uniq User.compare
+                 |> List.map User.to_string
+                 |> List.map HTML.li
+                 |> HTML.ol
+             in
+             HTML.h2 event ^ l
+           )
+      |> String.concat "\n"
+    in
+    HTML.h1 "Events" ^ events
+  in
   let head = {|<meta http-equiv="refresh" content="60">|} in
   let links =
     List.map HTML.li
@@ -196,7 +229,7 @@ let admin _ =
       ]
     |> HTML.ul
   in
-  let body = HTML.html ~head (links ^ warnings ^ alive ^ screenshots) in
+  let body = HTML.html ~head (links ^ warnings ^ alive ^ screenshots ^ events) in
   Dream.html body
 
 let screenshots _ =

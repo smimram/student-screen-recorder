@@ -19,6 +19,14 @@ module List = struct
       | [] -> []
     in
     aux l
+
+  let assoc_all k l =
+    List.filter_map (fun (k',v) -> if k = k' then Some v else None) l
+
+  (** Convert an association list to a list of associations (key / values). *)
+  let assocs l =
+    let keys = List.map fst l |> List.sort_uniq Stdlib.compare in
+    List.map (fun k -> k, assoc_all k l) keys
 end
 
 module File = struct
