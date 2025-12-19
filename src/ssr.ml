@@ -278,8 +278,8 @@ let events _ =
   
 let () =
   let test = ref false in
-  let conffile = "ssr.yml" in
-  let eventfile = "events.yml" in
+  let conffile = Filename.concat !Config.data "ssr.yml" in
+  let eventfile = Filename.concat !Config.data "events.yml" in
   if Sys.file_exists conffile then
     (
       Printf.printf "Loading configuration from %s... %!" conffile;
