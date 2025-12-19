@@ -201,7 +201,6 @@ let admin _ =
     List.map HTML.li
       [
         HTML.a "screenshots/" "All screenshots";
-        HTML.a "events/" "Events";
         HTML.a "test/" "Test";
       ]
     |> HTML.ul
@@ -211,21 +210,19 @@ let admin _ =
 
 let screenshots _ =
   let body =
-    Sys.readdir !Config.events
-    |> Array.to_list
-    |> List.sort compare
-    |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.events d)
+    Event.list ()
     |> List.map
-         (fun d ->
+         (fun event ->
            let s =
-             Sys.readdir (Filename.concat !Config.events d)
+             Sys.readdir (Event.dir event)
              |> Array.to_list
+             |> List.filter (String.ends_with ~suffix:"png")
              |> List.sort compare
-             |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (d^"/"^f) (HTML.img ~width:"300" (d^"/"^f) ^ HTML.br () ^ f)))
+             |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (event^"/"^f) (HTML.img ~width:"300" (event^"/"^f) ^ HTML.br () ^ f)))
              |> String.concat "\n"
            in
            let s = HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" s in
-           HTML.h2 d ^ s
+           HTML.h2 event ^ s
          )
     |> String.concat "\n"
   in
@@ -266,30 +263,6 @@ let video request =
       in
       loop ()
     )
-
-let events _ =
-  let body =
-    HTML.h1 "Events"
-    ^ HTML.h2 "Add"
-    ^ {|
-       <form>
-       <label>Name:</label>
-       <input type="text" id="name" required><br>
-       <label>Begin:</label>
-       <input type="text" id="begin" required><br>
-       <label>End:</label>
-       <input type="text" id="end" required><br>
-       <button type="submit">Add</button>
-       </form>
-       |}
-    ^ HTML.h2 "List"
-    ^ (
-        Event.list ()
-        |> List.map HTML.li
-        |> HTML.ul
-    )
-  in
-  Dream.html @@ HTML.html body
   
 let () =
   let test = ref false in
@@ -351,6 +324,5 @@ let () =
                Dream.get "/screenshots/**" @@ Dream.static !Config.events;
                Dream.get "/video/:event/:lastname/:firstname" @@ video;
                Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
-               Dream.get "/events/" events;
              ]
          ]
