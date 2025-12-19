@@ -242,7 +242,7 @@ let video request =
   let cmd =
     Filename.quote_command "cat" files
     ^ " | "
-    ^ Filename.quote_command "ffmpeg" ["-f";"image2pipe";"-framerate";"60/10";"-i";"-";"-c:v";"libx264";"-pix_fmt";"yuv420p";"-f";"matroska";"-"]
+    ^ Filename.quote_command "ffmpeg" ["-framerate";"6";"-f";"image2pipe";"-i";"-";"-c:v";"libx264";"-pix_fmt";"yuv420p";"-f";"matroska";"-"]
   in
   Dream.log "Executing: %s\n%!" cmd;
   Dream.stream
