@@ -203,7 +203,7 @@ let admin _ =
                         u
                       )
                  |> List.sort_uniq Student.compare
-                 |> List.map Student.to_string
+                 |> List.map (fun s -> HTML.a (Printf.sprintf "video/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) (Student.to_string s))
                  |> List.map HTML.li
                  |> HTML.ol
              in
