@@ -1,5 +1,7 @@
 (** Users. *)
 
+open Extlib
+
 (** A user. *)
 type t =
   {
@@ -16,6 +18,15 @@ let make ~firstname ~lastname =
 let firstname u = u.firstname
 
 let lastname u = u.lastname
+
+let slug s =
+  let canonize s =
+    s
+    |> String.trim
+    |> String.lowercase_ascii
+    |> String.space_to_dash
+  in
+  canonize s.lastname ^ "-" ^ canonize s.firstname
 
 (* sort by last name *)
 let compare u1 u2 =

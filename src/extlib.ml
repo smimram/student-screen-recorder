@@ -67,6 +67,12 @@ module Time = struct
     Printf.sprintf "%d-%d-%d %d:%d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min
 end
 
+module String = struct
+  include String
+
+  let space_to_dash s = String.init (String.length s) (fun i -> if s.[i] = ' ' then '-' else s.[i])
+end
+
 module Yaml = struct
   include Yaml
 

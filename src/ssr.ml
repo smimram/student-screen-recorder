@@ -35,12 +35,11 @@ let store ~student ~client ~event ~screenshot =
   );
   let tm = Unix.localtime time in
   let filename =
-    let space_to_dash s = String.init (String.length s) (fun i -> if s.[i] = ' ' then '-' else s.[i]) in
     let canonize s =
       s
       |> String.trim
       |> String.lowercase_ascii
-      |> space_to_dash
+      |> String.space_to_dash
       |> (fun s -> check_string s; s)
     in
     let firstname = canonize @@ Student.firstname student in
@@ -233,16 +232,39 @@ let screenshots _ =
   let body = HTML.html body in
   Dream.html body
 
-let video _request =
-  (* let event = Dream.param request "event" in *)
-  (* let lastname = Dream.param request "lastname" in *)
-  (* let firstname = Dream.param request "firstname" in *)
-  (* Dream.stream *)
-    (* ~headers:[ *)
-      (* "Content-Type", "video/mp4"; *)
-      (* "Content-Disposition", "attachment; filename=\"screencast.mp4\""; *)
-  (* ] *)
-  assert false
+let video request =
+  let event = Dream.param request "event" in
+  let lastname = Dream.param request "lastname" in
+  let firstname = Dream.param request "firstname" in
+  let student = Student.make ~firstname ~lastname in
+  let files = Event.student_screenshots event student in
+  let cmd =
+    Filename.quote_command "echo" files
+    ^ " | "
+    ^ Filename.quote_command "ffmpeg" ["-f";"image2pipe";"-framerate";"60/10";"-i";"-";"-c:v";"libx264";"-pix_fmt";"yuv420p";"-"]
+  in
+  Printf.printf "*** cmd: %s\n%!" cmd;
+  Dream.stream
+    ~headers:[
+      "Content-Type", "video/mp4";
+      "Content-Disposition", Printf.sprintf "attachment; filename=\"%s.mp4\"" (Student.slug student);
+    ]
+    (fun stream ->
+      let ic = Unix.open_process_in cmd in
+      let buffer = Bytes.create 65536 in
+      let open Lwt.Infix in
+
+      let rec loop () =
+        match input ic buffer 0 (Bytes.length buffer) with
+        | 0 ->
+           ignore (Unix.close_process_in ic);
+           Dream.close stream
+        | n ->
+           Dream.write stream (Bytes.sub_string buffer 0 n)
+           >>= loop
+      in
+      loop ()
+    )
 
 let events _ =
   let body =
