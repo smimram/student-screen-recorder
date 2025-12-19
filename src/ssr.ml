@@ -23,12 +23,8 @@ let store ~student ~client ~event ~screenshot =
   let time = Unix.time () in
   (* Ensure that the event is valid. *)
   check_string event;
-  let event =
-    match Event.find_opt event with
-    | Some event -> event
-    | None -> failwith "Ignoring screenshot from %s, event %s does not exist." (Student.to_string student) event
-  in
-  if not (Event.valid time event) then failwith "Ignoring screenshot from %s, invalid time for event %s" (Student.to_string student) (Event.name event);
+  if not @@ Event.exists event then failwith "Ignoring screenshot from %s, event %s does not exist." (Student.to_string student) event;
+  if not (Event.valid time event) then failwith "Ignoring screenshot from %s, invalid time for event %s" (Student.to_string student) event;
   (* Ensure that the screenshot is not too big. *)
   assert (String.length screenshot <= 10*1024*1024);
   (* At least 5 sec to avoid being flooded. *)
@@ -51,7 +47,7 @@ let store ~student ~client ~event ~screenshot =
     let lastname = canonize @@ Student.lastname student in
     Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" lastname firstname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
-  let dir = Filename.concat !Config.events (Event.name event) in
+  let dir = Filename.concat !Config.events event in
   if Sys.file_exists dir then assert (Sys.is_directory dir) else Sys.mkdir dir 0o755;
   let full_filename = Filename.concat dir filename in
   let oc = open_out full_filename in
@@ -88,7 +84,7 @@ let store ~student ~client ~event ~screenshot =
             ]
         );
     );
-  Last.set ~time ~student ~ip ~port ~event ~filename:(Filename.concat (Event.name event) filename)
+  Last.set ~time ~student ~ip ~port ~event ~filename:(Filename.concat event filename)
 
 (** Handle screenshot upload. *)
 let upload response =
@@ -186,7 +182,7 @@ let admin _ =
   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
   let events =
     let events =
-      Event.names ()
+      Event.list ()
       |> List.map
            (fun event ->
              let dir = Filename.concat !Config.events event in
@@ -277,7 +273,7 @@ let events _ =
        |}
     ^ HTML.h2 "List"
     ^ (
-        Event.names ()
+        Event.list ()
         |> List.map HTML.li
         |> HTML.ul
     )

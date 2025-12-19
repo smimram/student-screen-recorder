@@ -20,7 +20,6 @@ let table = Hashtbl.create 100
 
 (** Set last connection. *)
 let set ~time ~(student:Student.t) ~ip ~port ~event ~filename =
-  let event = Event.name event in
   protect (fun () -> Hashtbl.replace table student { time; ip; port; event; filename })
 
 let find_opt student =

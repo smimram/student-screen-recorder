@@ -9,26 +9,29 @@ type t =
     closing : float option; (** closing time *)
   }
 
-let name e = e.name
-
-(** All available event names. *)
-let names () =
+(** All available events. *)
+let list () =
   Sys.readdir !Config.events
   |> Array.to_list
   |> List.sort compare
   |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.events d)
 
+let exists event =
+  List.mem event @@ list ()
+
 let find_opt name =
-  if not (List.mem name @@ names ()) then None else
-    (* TODO: parse opening and closing time *)
-    (* let conf = Filename.concat (Filename.concat !Config.events name) "_event.yml" in *)
-    (* if not @@ Sys.file_exists conf then *)
+  if not (List.mem name @@ list ()) then None else
     Some { name; opening = None; closing = None }
 
 (** Whether current time is within the opening time of event. *)
-let valid time e =
-  (match e.opening with Some t -> t <= time | None -> true)
-  && (match e.closing with Some t -> time <= t | None -> true)
+let valid time _event =
+  (* TODO: parse opening and closing time *)
+  (* let conf = Filename.concat (Filename.concat !Config.events name) "_event.yml" in *)
+  (* if not @@ Sys.file_exists conf then *)
+  let opening = None in
+  let closing = None in
+  (match opening with Some t -> t <= time | None -> true)
+  && (match closing with Some t -> time <= t | None -> true)
 
 (*
 let protect f =
