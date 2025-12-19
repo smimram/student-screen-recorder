@@ -244,7 +244,7 @@ let video request =
     ^ " | "
     ^ Filename.quote_command "ffmpeg" ["-f";"image2pipe";"-framerate";"60/10";"-i";"-";"-c:v";"libx264";"-pix_fmt";"yuv420p";"-f";"matroska";"-"]
   in
-  Printf.printf "*** cmd: %s\n%!" cmd;
+  Dream.log "Executing: %s\n%!" cmd;
   Dream.stream
     ~headers:[
       "Content-Type", "video/x-matroska";
