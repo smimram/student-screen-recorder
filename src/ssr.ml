@@ -51,7 +51,7 @@ let store ~student ~client ~event ~screenshot =
     let lastname = canonize @@ Student.lastname student in
     Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" lastname firstname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
-  let dir = Filename.concat !Config.screenshots (Event.name event) in
+  let dir = Filename.concat !Config.events (Event.name event) in
   if Sys.file_exists dir then assert (Sys.is_directory dir) else Sys.mkdir dir 0o755;
   let full_filename = Filename.concat dir filename in
   let oc = open_out full_filename in
@@ -173,7 +173,7 @@ let admin _ =
     in
     if warnings = "" then "" else HTML.h1 "Warnings" ^ warnings
   in
-  let alive = HTML.h1 "Students" ^ alive in
+  let alive = HTML.h1 "Live" ^ alive in
   let screenshots =
     List.map
       (fun (e, uu) ->
@@ -186,13 +186,13 @@ let admin _ =
   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
   let events =
     let events =
-      Sys.readdir !Config.screenshots
+      Sys.readdir !Config.events
       |> Array.to_list
-      |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
+      |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.events d)
       |> List.map (fun event ->
-             let dir = Filename.concat !Config.screenshots event in
+             let dir = Filename.concat !Config.events event in
              let l =
-               let csv = Filename.concat dir "ssr.csv" in
+               let csv = Filename.concat dir "_screenshots.csv" in
                if not (Sys.file_exists csv) then "" else
                  File.read csv
                  |> Csv.of_string
@@ -230,14 +230,14 @@ let admin _ =
 
 let screenshots _ =
   let body =
-    Sys.readdir !Config.screenshots
+    Sys.readdir !Config.events
     |> Array.to_list
     |> List.sort compare
-    |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.screenshots d)
+    |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.events d)
     |> List.map
          (fun d ->
            let s =
-             Sys.readdir (Filename.concat !Config.screenshots d)
+             Sys.readdir (Filename.concat !Config.events d)
              |> Array.to_list
              |> List.sort compare
              |> List.map (fun f -> HTML.div (HTML.a ~target:"_blank" (d^"/"^f) (HTML.img ~width:"300" (d^"/"^f) ^ HTML.br () ^ f)))
@@ -268,8 +268,7 @@ let events _ =
        |}
     ^ HTML.h2 "List"
     ^ (
-        Event.list ()
-        |> List.map (fun e -> e.Event.name)
+        Event.names ()
         |> List.map HTML.li
         |> HTML.ul
     )
@@ -279,17 +278,10 @@ let events _ =
 let () =
   let test = ref false in
   let conffile = Filename.concat !Config.data "ssr.yml" in
-  let eventfile = Filename.concat !Config.data "events.yml" in
   if Sys.file_exists conffile then
     (
       Printf.printf "Loading configuration from %s... %!" conffile;
       Config.load conffile;
-      Printf.printf "done.\n%!"
-    );
-  if Sys.file_exists eventfile then
-    (
-      Printf.printf "Loading events from %s... %!" eventfile;
-      Event.load eventfile;
       Printf.printf "done.\n%!"
     );
   Arg.parse
@@ -340,7 +332,7 @@ let () =
            Dream.scope "/admin" [ensure_admin] [
                Dream.get "/" admin;
                Dream.get "/screenshots/" screenshots;
-               Dream.get "/screenshots/**" @@ Dream.static !Config.screenshots;
+               Dream.get "/screenshots/**" @@ Dream.static !Config.events;
                Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
                Dream.get "/events/" events;
              ]

@@ -9,11 +9,8 @@ let admin_password = ref "admin"
 (** Path where all internal data is stored. *)
 let data = ref "data"
 
-(** Path where screenshots are stored. *)
-let screenshots = ref "data/screenshots"
-
-(** Open events. *)
-let events : string list option ref = ref None
+(** Path where screenshots for events are stored. *)
+let events = ref "data/events"
 
 (** Load the configuration file. *)
 let load fname =

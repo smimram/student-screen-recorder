@@ -1,6 +1,6 @@
 (** Events. *)
 
-open Extlib
+(* open Extlib *)
 
 type t =
   {
@@ -9,6 +9,27 @@ type t =
     closing : float option; (** closing time *)
   }
 
+let name e = e.name
+
+(** All available event names. *)
+let names () =
+  Sys.readdir !Config.events
+  |> Array.to_list
+  |> List.sort compare
+  |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.events d)
+
+let find_opt name =
+  if not (List.mem name @@ names ()) then None else
+    (* let conf = Filename.concat (Filename.concat !Config.events name) "_event.yml" in *)
+    (* if not @@ Sys.file_exists conf then *)
+    Some { name; opening = None; closing = None }
+
+(** Whether current time is within the opening time of event. *)
+let valid time e =
+  (match e.opening with Some t -> t <= time | None -> true)
+  && (match e.closing with Some t -> time <= t | None -> true)
+
+(*
 let protect f =
   let m = Mutex.create () in
   Mutex.protect m f
@@ -52,19 +73,4 @@ let store fname =
   in
   let yaml = `O yaml in
   Yaml.to_string yaml |> Result.get_ok |> File.write fname
-
-let name e = e.name
-
-let list () =
-  protect (fun () -> List.sort compare !events)
-
-let exists name =
-  List.exists (fun e -> e.name = name) @@ list ()
-
-let find_opt name =
-  List.find_opt (fun e -> e.name = name) @@ list ()
-
-(** Whether current time is within the opening time of event. *)
-let valid time e =
-  (match e.opening with Some t -> t <= time | None -> true)
-  && (match e.closing with Some t -> time <= t | None -> true)
+ *)
