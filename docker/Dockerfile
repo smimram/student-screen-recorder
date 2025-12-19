@@ -2,7 +2,7 @@ FROM debian:stable-slim
 
 RUN apt-get -y update
 
-RUN apt-get -y install build-essential ocaml opam
+RUN apt-get -y install build-essential ocaml opam ffmpeg
 
 WORKDIR /home
 
