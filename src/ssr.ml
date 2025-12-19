@@ -70,7 +70,7 @@ let store ~student ~client ~event ~screenshot =
   (* TODO: per-event mutex? *)
   Mutex.protect m
     (fun () ->
-      let csv = Filename.concat dir "ssr.csv" in
+      let csv = Filename.concat dir "screenshots.csv" in
       let header = not (Sys.file_exists csv) in
       Out_channel.with_open_gen [Open_wronly; Open_creat; Open_append] 0o644 csv
         (fun oc ->
@@ -192,7 +192,7 @@ let admin _ =
       |> List.map (fun event ->
              let dir = Filename.concat !Config.events event in
              let l =
-               let csv = Filename.concat dir "_screenshots.csv" in
+               let csv = Filename.concat dir "screenshots.csv" in
                if not (Sys.file_exists csv) then "" else
                  File.read csv
                  |> Csv.of_string
