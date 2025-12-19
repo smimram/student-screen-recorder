@@ -80,7 +80,7 @@ let store ~student ~client ~event ~screenshot =
             [
               Student.lastname student;
               Student.firstname student;
-              Printf.sprintf "%04d/%02d/%02d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday;
+              Printf.sprintf "%04d-%02d-%02d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday;
               Printf.sprintf "%02d:%02d:%02d" tm.tm_hour tm.tm_min tm.tm_sec;
               ip;
               string_of_int port;
