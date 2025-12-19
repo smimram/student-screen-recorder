@@ -33,6 +33,25 @@ let valid time _event =
   (match opening with Some t -> t <= time | None -> true)
   && (match closing with Some t -> time <= t | None -> true)
 
+let dir event = Filename.concat !Config.events event
+
+(** All students who submitted in the event. *)
+let students event =
+  let csv = Filename.concat (dir event) "screenshots.csv" in
+  if not (Sys.file_exists csv) then [] else
+    In_channel.with_open_bin csv (fun ic -> Csv.of_channel ~has_header:true ic |> Csv.Rows.input_all)
+    |> List.map
+         (fun row ->
+           let find = Csv.Row.find row in
+           let firstname = find "Firstname" in
+           let lastname = find "Lastname" in
+           let u = Student.make ~firstname ~lastname in
+           u
+         )
+    |> List.sort_uniq Student.compare
+
+let () = ()
+
 (*
 let protect f =
   let m = Mutex.create () in
