@@ -249,6 +249,17 @@ let screenshots _ =
   let body = HTML.html body in
   Dream.html body
 
+let video _request =
+  (* let event = Dream.param request "event" in *)
+  (* let lastname = Dream.param request "lastname" in *)
+  (* let firstname = Dream.param request "firstname" in *)
+  (* Dream.stream *)
+    (* ~headers:[ *)
+      (* "Content-Type", "video/mp4"; *)
+      (* "Content-Disposition", "attachment; filename=\"screencast.mp4\""; *)
+  (* ] *)
+  assert false
+
 let events _ =
   let body =
     HTML.h1 "Events"
@@ -331,6 +342,7 @@ let () =
                Dream.get "/" admin;
                Dream.get "/screenshots/" screenshots;
                Dream.get "/screenshots/**" @@ Dream.static !Config.events;
+               Dream.get "/video/:event/:firstname/:lastname" @@ video;
                Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
                Dream.get "/events/" events;
              ]
