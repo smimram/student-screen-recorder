@@ -8,7 +8,11 @@ let admin_password = ref "admin"
 
 let check_events = ref false
 
-let screenshots = ref "screenshots"
+(** Path where all internal data is stored. *)
+let data = ref "data"
+
+(** Path where screenshots are stored. *)
+let screenshots = ref "data/screenshots"
 
 (** Open events. *)
 let events : string list option ref = ref None
