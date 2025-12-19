@@ -20,6 +20,7 @@ let names () =
 
 let find_opt name =
   if not (List.mem name @@ names ()) then None else
+    (* TODO: parse opening and closing time *)
     (* let conf = Filename.concat (Filename.concat !Config.events name) "_event.yml" in *)
     (* if not @@ Sys.file_exists conf then *)
     Some { name; opening = None; closing = None }
