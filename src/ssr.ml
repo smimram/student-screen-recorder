@@ -238,16 +238,17 @@ let video request =
   let firstname = Dream.param request "firstname" in
   let student = Student.make ~firstname ~lastname in
   let files = Event.student_screenshots event student in
+  Dream.log "Generating video for %s in %s" (Student.to_string student) event;
   let cmd =
-    Filename.quote_command "echo" files
+    Filename.quote_command "cat" files
     ^ " | "
-    ^ Filename.quote_command "ffmpeg" ["-f";"image2pipe";"-framerate";"60/10";"-i";"-";"-c:v";"libx264";"-pix_fmt";"yuv420p";"-"]
+    ^ Filename.quote_command "ffmpeg" ["-f";"image2pipe";"-framerate";"60/10";"-i";"-";"-c:v";"libx264";"-pix_fmt";"yuv420p";"-f";"matroska";"-"]
   in
   Printf.printf "*** cmd: %s\n%!" cmd;
   Dream.stream
     ~headers:[
-      "Content-Type", "video/mp4";
-      "Content-Disposition", Printf.sprintf "attachment; filename=\"%s.mp4\"" (Student.slug student);
+      "Content-Type", "video/x-matroska";
+      "Content-Disposition", Printf.sprintf "attachment; filename=\"%s.mkv\"" (Student.slug student);
     ]
     (fun stream ->
       let ic = Unix.open_process_in cmd in
@@ -348,7 +349,7 @@ let () =
                Dream.get "/" admin;
                Dream.get "/screenshots/" screenshots;
                Dream.get "/screenshots/**" @@ Dream.static !Config.events;
-               Dream.get "/video/:event/:firstname/:lastname" @@ video;
+               Dream.get "/video/:event/:lastname/:firstname" @@ video;
                Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
                Dream.get "/events/" events;
              ]

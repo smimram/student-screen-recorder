@@ -55,6 +55,7 @@ let students event =
 
 (** All screenshots from a student. *)
 let student_screenshots event s =
+  let dir = dir event in
   screenshots_rows event
   |> List.filter_map
        (fun row ->
@@ -65,6 +66,7 @@ let student_screenshots event s =
          if Student.make ~firstname ~lastname = s then Some filename
          else None
        )
+  |> List.map (Filename.concat dir)
 
 let () = ()
 
