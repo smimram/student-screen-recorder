@@ -168,7 +168,7 @@ let admin _ =
     in
     if warnings = "" then "" else HTML.h1 "Warnings" ^ warnings
   in
-  let alive = HTML.h1 "Live" ^ alive in
+  let alive = HTML.h1 "Live students" ^ alive in
   let screenshots =
     List.map
       (fun (e, uu) ->
@@ -178,7 +178,7 @@ let admin _ =
       ) @@ Last.by_event ()
     |> String.concat "\n"
   in
-  let screenshots = HTML.h1 "Screenshots" ^ screenshots in
+  let screenshots = HTML.h1 "Live screenshots" ^ screenshots in
   let events =
     let events =
       Event.list ()
@@ -194,7 +194,7 @@ let admin _ =
            )
       |> String.concat "\n"
     in
-    HTML.h1 "Events" ^ events
+    HTML.h1 "All events" ^ events
   in
   let head = {|<meta http-equiv="refresh" content="60">|} in
   let links =
