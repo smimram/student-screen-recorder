@@ -186,18 +186,18 @@ let admin _ =
   let screenshots = HTML.h1 "Screenshots" ^ screenshots in
   let events =
     let events =
-      Sys.readdir !Config.events
-      |> Array.to_list
-      |> List.filter (fun d -> Sys.is_directory @@ Filename.concat !Config.events d)
-      |> List.map (fun event ->
+      Event.names ()
+      |> List.map
+           (fun event ->
              let dir = Filename.concat !Config.events event in
              let l =
                let csv = Filename.concat dir "screenshots.csv" in
                if not (Sys.file_exists csv) then "" else
                  File.read csv
-                 |> Csv.of_string
+                 |> Csv.of_string ~has_header:true
                  |> Csv.Rows.input_all
-                 |> List.map (fun row ->
+                 |> List.map
+                      (fun row ->
                         let find = Csv.Row.find row in
                         let firstname = find "Firstname" in
                         let lastname = find "Lastname" in
