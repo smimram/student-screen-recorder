@@ -35,7 +35,7 @@ Of course, you should replace `localhost` by the name of the server. You should 
 </form>
 ```
 
-which will add a form allowing students to login with their name (no verification is performed here). Again, you should replace `localhost` with the actual host above and the value of `event` by the actual event instead `my-exam`. And that's it! When student log in, they will be asked permission to share their screen, which they should give.
+which will add a form allowing students to login with their name (no verification is performed here). Again, you should replace `localhost` with the actual host above and the value of `event` by the actual event instead of `my-exam`. And that's it! When student log in, they will be asked permission to share their screen, which they should give.
 
 In order to test this without making an exam, you can go at <https://localhost:8080/admin/test/> (you need to be logged in, see below).
 
