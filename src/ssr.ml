@@ -193,9 +193,7 @@ let admin _ =
              let l =
                let csv = Filename.concat dir "screenshots.csv" in
                if not (Sys.file_exists csv) then "" else
-                 File.read csv
-                 |> Csv.of_string ~has_header:true
-                 |> Csv.Rows.input_all
+                 In_channel.with_open_bin csv (fun ic -> Csv.of_channel ~has_header:true ic |> Csv.Rows.input_all)
                  |> List.map
                       (fun row ->
                         let find = Csv.Row.find row in
