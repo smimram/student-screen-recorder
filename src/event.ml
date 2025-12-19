@@ -5,15 +5,15 @@ open Extlib
 type t =
   {
     name : string;
-    opening : float; (** opening time *)
-    closing : float; (** closing time *)
+    opening : float option; (** opening time *)
+    closing : float option; (** closing time *)
   }
 
 let protect f =
   let m = Mutex.create () in
   Mutex.protect m f
 
-let events = ref []
+let events = ref [{name = "test"; opening = None; closing = None}]
 
 let load fname =
   let yaml = File.read fname |> Yaml.of_string |> Result.get_ok in
@@ -25,10 +25,15 @@ let load fname =
            (function
             | name, yaml ->
                match yaml with
-               | `O ["begin", `String b; "end", `String e] ->
-                  let opening = Time.of_string b in
-                  let closing = Time.of_string e in
-                  let e = {name; opening; closing} in
+               | `O ["begin", opening; "end", closing] ->
+                  let to_time_opt s =
+                    s
+                    |> Yaml.Util.to_string_option_exn
+                    |> Option.map Time.of_string
+                  in
+                  let opening = to_time_opt opening in
+                  let closing = to_time_opt closing in
+                  let e = {name; opening = opening; closing = closing} in
                   events := e :: !events
                | _ -> assert false
            ) l
@@ -40,11 +45,15 @@ let store fname =
   let yaml =
     List.map
       (fun e ->
-        e.name, `O ["begin", `String (Time.to_string e.opening); "end", `String (Time.to_string e.closing)]
+        let opening = Option.fold ~none:`Null ~some:(fun s -> `String (Time.to_string s)) e.opening in
+        let closing = Option.fold ~none:`Null ~some:(fun s -> `String (Time.to_string s)) e.closing in
+        e.name, `O ["begin", opening; "end", closing]
       ) (protect (fun () -> !events))
   in
   let yaml = `O yaml in
   Yaml.to_string yaml |> Result.get_ok |> File.write fname
+
+let name e = e.name
 
 let list () =
   protect (fun () -> List.sort compare !events)
@@ -52,9 +61,10 @@ let list () =
 let exists name =
   List.exists (fun e -> e.name = name) @@ list ()
 
-let find name =
-  List.find (fun e -> e.name = name) @@ list ()
+let find_opt name =
+  List.find_opt (fun e -> e.name = name) @@ list ()
 
-let valid time name =
-  let e = find name in
-  e.opening <= time && time <= e.closing
+(** Whether current time is within the opening time of event. *)
+let valid time e =
+  (match e.opening with Some t -> t <= time | None -> true)
+  && (match e.closing with Some t -> time <= t | None -> true)

@@ -66,3 +66,20 @@ module Time = struct
     let tm = Unix.gmtime t in
     Printf.sprintf "%d-%d-%d %d:%d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min
 end
+
+module Yaml = struct
+  include Yaml
+
+  module Util = struct
+    include Util
+
+    let to_string_option_exn = function
+      | `String s -> Some s
+      | `Null -> None
+      | _ -> assert false
+
+    let of_string_option = function
+      | Some s -> `String s
+      | None -> `Null
+  end
+end
