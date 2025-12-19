@@ -6,8 +6,6 @@ let admin_user = ref "admin"
 
 let admin_password = ref "admin"
 
-let check_events = ref false
-
 (** Path where all internal data is stored. *)
 let data = ref "data"
 
