@@ -19,20 +19,20 @@ let check_string ?(max_length=1024) s =
   assert (not @@ String.contains s '\\')
 
 (** Store screenshot. *)
-let store ~user ~client ~event ~screenshot =
+let store ~student ~client ~event ~screenshot =
   let time = Unix.time () in
   (* Ensure that the event is valid. *)
   if !Config.check_events then
     (
-      if not (Event.exists event) then failwith "Ignoring screenshot from %s, event %s does not exist." (User.to_string user) event;
-      if not (Event.valid time event) then failwith "Ignoring screenshot from %s, invalid time for event %s" (User.to_string user) event;
+      if not (Event.exists event) then failwith "Ignoring screenshot from %s, event %s does not exist." (Student.to_string student) event;
+      if not (Event.valid time event) then failwith "Ignoring screenshot from %s, invalid time for event %s" (Student.to_string student) event;
     );
   (* Ensure that the screenshot is not too big. *)
   assert (String.length screenshot <= 10*1024*1024);
   (* At least 5 sec to avoid being flooded. *)
   (
-    match Last.find_opt user with
-    | Some c -> if time < c.time +. 5. then failwith "Ignoring screenshot from %s, last was only %.02fs ago" (User.to_string user) (time -. c.time)
+    match Last.find_opt student with
+    | Some c -> if time < c.time +. 5. then failwith "Ignoring screenshot from %s, last was only %.02fs ago" (Student.to_string student) (time -. c.time)
     | None -> ()
   );
   let tm = Unix.localtime time in
@@ -45,8 +45,8 @@ let store ~user ~client ~event ~screenshot =
       |> space_to_dash
       |> (fun s -> check_string s; s)
     in
-    let firstname = canonize @@ User.firstname user in
-    let lastname = canonize @@ User.lastname user in
+    let firstname = canonize @@ Student.firstname student in
+    let lastname = canonize @@ Student.lastname student in
     Printf.sprintf "%s-%s-%04d%02d%02d-%02d%02d%02d.png" lastname firstname (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec
   in
   check_string event;
@@ -82,8 +82,8 @@ let store ~user ~client ~event ~screenshot =
           if header then Csv.output_record csv ["Lastname"; "Firstname"; "Date"; "Time"; "IP"; "Port"; "Filename"];
           Csv.output_record csv
             [
-              User.lastname user;
-              User.firstname user;
+              Student.lastname student;
+              Student.firstname student;
               Printf.sprintf "%04d/%02d/%02d" (tm.tm_year+1900) (tm.tm_mon+1) tm.tm_mday;
               Printf.sprintf "%02d:%02d:%02d" tm.tm_hour tm.tm_min tm.tm_sec;
               ip;
@@ -92,7 +92,7 @@ let store ~user ~client ~event ~screenshot =
             ]
         );
     );
-  Last.set ~time ~user ~ip ~port ~event ~filename:(Filename.concat event filename)
+  Last.set ~time ~student ~ip ~port ~event ~filename:(Filename.concat event filename)
 
 (** Handle screenshot upload. *)
 let upload response =
@@ -107,11 +107,11 @@ let upload response =
           Dream.log "Multipart form fields: %s" @@ (String.concat ", " @@ List.map fst fields);
           let firstname = List.assoc "firstname" fields |> List.hd |> snd in
           let lastname = List.assoc "lastname" fields |> List.hd |> snd in
-          let user = User.make ~firstname ~lastname in
+          let student = Student.make ~firstname ~lastname in
           let event = List.assoc "event" fields |> List.hd |> snd in
           let screenshot = List.assoc "screenshot" fields |> List.hd |> snd in
-          Dream.log "Form from %s (%s)" (User.to_string user) event;
-          store ~user ~client:(Dream.client response) ~event ~screenshot;
+          Dream.log "Form from %s (%s)" (Student.to_string student) event;
+          store ~student ~client:(Dream.client response) ~event ~screenshot;
           Dream.respond ~headers "ok"
        | _ ->
           Dream.log "Invalid multipart";
@@ -125,11 +125,11 @@ let upload response =
           Dream.log "Form fields: %s" (String.concat ", " @@ List.map fst fields);
           let firstname = List.assoc "firstname" fields in
           let lastname = List.assoc "lastname "fields in
-          let user = User.make ~firstname ~lastname in
+          let student = Student.make ~firstname ~lastname in
           let event = List.assoc "event" fields in
           let screenshot = List.assoc "screenshot" fields in
-          Dream.log "Form from %s (%s)" (User.to_string user) event;
-          store ~user ~client:(Dream.client response) ~event ~screenshot;
+          Dream.log "Form from %s (%s)" (Student.to_string student) event;
+          store ~student ~client:(Dream.client response) ~event ~screenshot;
           Dream.respond ~headers "ok"
        | _ ->
           Dream.log "Invalid form";
@@ -146,13 +146,13 @@ let admin _ =
     List.map
       (fun (e, uu) ->
         let open Last in
-        let uu = uu |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ol in
+        let uu = uu |> List.map (fun (u,l) -> Student.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ol in
         let gone =
           let gone = Last.gone ~event:e () in
           if gone = [] then ""
           else
             HTML.p "Recently gone:"
-            ^ (gone |> List.map (fun (u,l) -> User.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ul)
+            ^ (gone |> List.map (fun (u,l) -> Student.to_string u ^ Printf.sprintf " (since %ds, from %s:%d)" (int_of_float @@ Float.round (now -. l.time)) l.ip l.port) |> List.map HTML.li |> HTML.ul)
         in
         HTML.h2 e ^ uu ^ gone
       ) @@ Last.by_event ()
@@ -165,11 +165,11 @@ let admin _ =
     in
     let warnings =
       if byip = [] then "" else
-        HTML.p "Users with same IP:" ^
+        HTML.p "Students with same IP:" ^
           (
             List.map
               (fun (ip,uu) ->
-                Printf.sprintf "%s: %s" ip (String.concat ", " @@ List.map User.to_string uu)
+                Printf.sprintf "%s: %s" ip (String.concat ", " @@ List.map Student.to_string uu)
               ) byip
             |> List.map HTML.li
             |> HTML.ul
@@ -182,7 +182,7 @@ let admin _ =
     List.map
       (fun (e, uu) ->
         let open Last in
-        let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.filename) (HTML.img ~width:"400" ("screenshots/"^l.filename)) ^ HTML.br () ^ User.to_string u)) |> String.concat "\n" in
+        let uu = uu |> List.map (fun (u,l) -> HTML.div (HTML.a ~target:"_blank" ("screenshots/"^l.filename) (HTML.img ~width:"400" ("screenshots/"^l.filename)) ^ HTML.br () ^ Student.to_string u)) |> String.concat "\n" in
         HTML.h2 e ^ HTML.div ~style:"display: flex; flex-wrap: wrap; gap: 10px;" uu
       ) @@ Last.by_event ()
     |> String.concat "\n"
@@ -205,11 +205,11 @@ let admin _ =
                         let find = Csv.Row.find row in
                         let firstname = find "Firstname" in
                         let lastname = find "Lastname" in
-                        let u = User.make ~firstname ~lastname in
+                        let u = Student.make ~firstname ~lastname in
                         u
                       )
-                 |> List.sort_uniq User.compare
-                 |> List.map User.to_string
+                 |> List.sort_uniq Student.compare
+                 |> List.map Student.to_string
                  |> List.map HTML.li
                  |> HTML.ol
              in

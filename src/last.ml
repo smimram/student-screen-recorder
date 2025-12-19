@@ -2,7 +2,7 @@
 
 open Extlib
 
-(** Last connection from a user. *)
+(** Last connection from a student. *)
 type t =
   {
     time : float; (** last successful upload *)
@@ -19,22 +19,22 @@ let protect f =
 let table = Hashtbl.create 100
 
 (** Set last connection. *)
-let set ~time ~(user:User.t) ~ip ~port ~event ~filename =
-  protect (fun () -> Hashtbl.replace table user { time; ip; port; event; filename })
+let set ~time ~(student:Student.t) ~ip ~port ~event ~filename =
+  protect (fun () -> Hashtbl.replace table student { time; ip; port; event; filename })
 
-let find_opt user =
-  protect (fun () -> Hashtbl.find_opt table user)
+let find_opt student =
+  protect (fun () -> Hashtbl.find_opt table student)
 
-(** Users alive. *)
+(** Students alive. *)
 let alive ?(since=60.) () =
   let t = Unix.time () in
   let compare (u1,l1) (u2,l2) =
-    let c = User.compare u1 u2 in
+    let c = Student.compare u1 u2 in
     if c <> 0 then c else compare l1 l2
   in
   protect (fun () -> Hashtbl.to_seq table) |> Seq.filter (fun (_,l) -> l.time >= t -. since) |> List.of_seq |> List.sort compare
 
-(** Users who recently went away. *)
+(** Students who recently went away. *)
 let gone ?since_alive ?(since_gone=3600.) ?event () =
   let gone = alive ~since:since_gone () in
   let alive = alive ?since:since_alive () in
