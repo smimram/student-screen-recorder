@@ -13,6 +13,8 @@ make serve
 
 in the main directory. This runs the server which is used to collect screenshots and view them. You can test that it is running by going to <http://localhost:8080>.
 
+However, if you are running in production, I strongly suggest that you use the docker image (see below).
+
 ## Preparing an exam
 
 The screenshot are collected per _event_ (an event is typically an exam) and stored in `data/event/`. In order to create a new event, simply create a subdirectory there; for instance, named `my-exam`. The in the webpage for your exam, you should add the following header
@@ -51,6 +53,22 @@ admin_password: "secretpass"
 
 (more options for the program should go there too).
 
-## Deploying
+## Deploying using docker
 
-In order to deploy on a server, you can create a [docker image](docker/Dockerfile).
+In order to deploy on a server, we provide a [docker image](docker/Dockerfile). We provide a simple launch command in the makefile, but it is better to run it in the following way:
+
+```bash
+docker run -d \
+  --add-host host.docker.internal:host-gateway \
+  -p 8080:8080/tcp \
+  --memory=2G \
+  --cpus=10 \
+  --log-driver=journald \
+  --log-opt tag="ssr" \
+  --restart=always \
+  --name=ssr \
+  --volume /home/myuser/ssr-data:/home/ssr/data \
+  ssr
+```
+
+This limits the memory and CPU consumption, redirects the logs in the system log, makes sure that the server is always restarted, and mounts the `ssr-data` as `data` folder in the docker so that screenshots can easily be retrieved in this folder without having to log into the docker. Also remember to create an `ssr.yml` file in this folder as described above!
