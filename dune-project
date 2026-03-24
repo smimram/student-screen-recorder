@@ -2,7 +2,7 @@
 (name ssr)
 (source (github smimram/student-screen-recorder))
 (version 0.1.0)
-(license AGPL-3.0)
+(license AGPL-3.0-or-later)
 (authors "Samuel Mimram <smimram@gmail.com>")
 (maintainers "Samuel Mimram <smimram@gmail.com>")
  

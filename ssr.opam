@@ -6,7 +6,7 @@ description:
   "This is a small web application to regularly take a screenshot of the screen of students, typically to make sure that there is no cheating during an exam. Image capture is done by using capabilities of modern browsers."
 maintainer: ["Samuel Mimram <smimram@gmail.com>"]
 authors: ["Samuel Mimram <smimram@gmail.com>"]
-license: "AGPL-3.0"
+license: "AGPL-3.0-or-later"
 homepage: "https://github.com/smimram/student-screen-recorder"
 bug-reports: "https://github.com/smimram/student-screen-recorder/issues"
 depends: [
