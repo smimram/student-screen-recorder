@@ -11,6 +11,7 @@ type t =
 
 (** All available events. *)
 let list () =
+  if not (Sys.file_exists !Config.events) then failwith ("Please create directory " ^ !Config.events ^ " to store events.");
   Sys.readdir !Config.events
   |> Array.to_list
   |> List.sort compare
