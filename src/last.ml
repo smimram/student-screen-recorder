@@ -12,8 +12,9 @@ type t =
     filename : string; (** filename for last successful upload *)
   }
 
+let m = Mutex.create ()
+
 let protect f =
-  let m = Mutex.create () in
   Mutex.protect m f
 
 let table = Hashtbl.create 100
