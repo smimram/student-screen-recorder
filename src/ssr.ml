@@ -115,7 +115,7 @@ let upload response =
        | `Ok fields ->
           Dream.log "Form fields: %s" (String.concat ", " @@ List.map fst fields);
           let firstname = List.assoc "firstname" fields in
-          let lastname = List.assoc "lastname "fields in
+          let lastname = List.assoc "lastname" fields in
           let student = Student.make ~firstname ~lastname in
           let event = List.assoc "event" fields in
           let screenshot = List.assoc "screenshot" fields in
