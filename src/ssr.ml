@@ -15,8 +15,7 @@ let m = Mutex.create ()
 let check_string ?(max_length=1024) s =
   assert (not @@ String.starts_with ~prefix:"." s);
   assert (String.length s <= max_length);
-  assert (not @@ String.contains s '/');
-  assert (not @@ String.contains s '\\')
+  List.iter (fun c -> assert (not @@ String.contains s c)) ['/';'\\';'<';'>';'&';'\"';'\'']
 
 (** Store screenshot. *)
 let store ~student ~client ~event ~screenshot =
