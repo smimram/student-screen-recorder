@@ -186,7 +186,12 @@ let admin _ =
            (fun event ->
              let l =
                Event.students event
-               |> List.map (fun s -> HTML.a (Printf.sprintf "video/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) (Student.to_string s))
+               |> List.map
+                    (fun s ->
+                      let video = HTML.a (Printf.sprintf "video/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) "video" in
+                      let zip = HTML.a (Printf.sprintf "zip/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) "zip" in
+                      Printf.sprintf "%s [ %s | %s ]" (Student.to_string s) video zip
+                    )
                |> List.map HTML.li
                |> HTML.ol
              in
@@ -251,7 +256,36 @@ let video request =
       let ic = Unix.open_process_in cmd in
       let buffer = Bytes.create 65536 in
       let open Lwt.Infix in
+      let rec loop () =
+        match input ic buffer 0 (Bytes.length buffer) with
+        | 0 ->
+           ignore (Unix.close_process_in ic);
+           Dream.close stream
+        | n ->
+           Dream.write stream (Bytes.sub_string buffer 0 n)
+           >>= loop
+      in
+      loop ()
+    )
 
+let zip request =
+  let event = Dream.param request "event" in
+  let lastname = Dream.param request "lastname" in
+  let firstname = Dream.param request "firstname" in
+  let student = Student.make ~firstname ~lastname in
+  let files = Event.student_screenshots event student in
+  Dream.log "Generating zip for %s in %s" (Student.to_string student) event;
+  let cmd = Filename.quote_command "zip" (["-j";"-"]@files) in
+  Dream.log "Executing: %s\n%!" cmd;
+  Dream.stream
+    ~headers:[
+      "Content-Type", "application/zip";
+      "Content-Disposition", Printf.sprintf "attachment; filename=\"%s.zip\"" (Student.slug student);
+    ]
+    (fun stream ->
+      let ic = Unix.open_process_in cmd in
+      let buffer = Bytes.create 65536 in
+      let open Lwt.Infix in
       let rec loop () =
         match input ic buffer 0 (Bytes.length buffer) with
         | 0 ->
@@ -323,6 +357,7 @@ let () =
                Dream.get "/screenshots/" screenshots;
                Dream.get "/screenshots/**" @@ Dream.static !Config.events;
                Dream.get "/video/:event/:lastname/:firstname" @@ video;
+               Dream.get "/zip/:event/:lastname/:firstname" @@ zip;
                Dream.get "/test/" @@ Dream.from_filesystem "static" "test.html";
              ]
          ]
