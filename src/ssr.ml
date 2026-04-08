@@ -188,7 +188,7 @@ let admin _ =
                |> List.map
                     (fun s ->
                       let video = HTML.a (Printf.sprintf "video/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) "video" in
-                      let zip = HTML.a (Printf.sprintf "zip/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) "zip" in
+                      let zip = HTML.a (Printf.sprintf "zip/%s/%s/%s" event (Student.lastname s) (Student.firstname s)) "images" in
                       Printf.sprintf "%s [ %s | %s ]" (Student.to_string s) video zip
                     )
                |> List.map HTML.li
